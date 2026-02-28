@@ -1,0 +1,215 @@
+<PreviewScreen>:
+    canvas.before:
+        Color:
+            rgba: BG_DARK
+        Rectangle:
+            pos: self.pos
+            size: self.size
+
+    BoxLayout:
+        orientation: 'vertical'
+
+        # StatusBar
+        BoxLayout:
+            size_hint_y: None
+            height: '40dp'
+            padding: ['8dp', '4dp']
+            canvas.before:
+                Color:
+                    rgba: BG_DARK
+                Rectangle:
+                    pos: self.pos
+                    size: self.size
+                Color:
+                    rgba: 1, 1, 1, 0.1
+                Line:
+                    points: [self.x, self.y, self.right, self.y]
+            Button:
+                size_hint: None, 1
+                width: '36dp'
+                background_color: TRANSPARENT
+                on_release: root.go_back()
+                Label:
+                    text: '<'
+                    font_size: '20sp'
+                    bold: True
+                    color: WHITE
+                    center: self.parent.center
+            Label:
+                text: 'Document Preview'
+                font_size: '14sp'
+                bold: True
+                color: WHITE
+                text_size: self.size
+                halign: 'left'
+                valign: 'middle'
+            Label:
+                size_hint_x: None
+                width: '60dp'
+                text: root.page_info
+                font_size: '10sp'
+                bold: True
+                color: 0.4, 0.4, 0.4, 1
+                text_size: self.size
+                halign: 'right'
+                valign: 'middle'
+
+        # Preview area
+        FloatLayout:
+            # Document mockup
+            BoxLayout:
+                pos_hint: {'center_x': 0.5, 'center_y': 0.55}
+                size_hint: 0.7, 0.85
+                canvas.before:
+                    Color:
+                        rgba: 1, 1, 1, 1
+                    RoundedRectangle:
+                        pos: self.pos
+                        size: self.size
+                        radius: [4]
+                BoxLayout:
+                    orientation: 'vertical'
+                    padding: '16dp'
+                    spacing: '8dp'
+                    # Placeholder lines
+                    Widget:
+                        size_hint_y: None
+                        height: '8dp'
+                        canvas:
+                            Color:
+                                rgba: 0.85, 0.85, 0.85, 1
+                            RoundedRectangle:
+                                pos: self.pos
+                                size: self.width * 0.75, self.height
+                                radius: [2]
+                    Widget:
+                        size_hint_y: None
+                        height: '8dp'
+                        canvas:
+                            Color:
+                                rgba: 0.85, 0.85, 0.85, 1
+                            RoundedRectangle:
+                                pos: self.pos
+                                size: self.width, self.height
+                                radius: [2]
+                    Widget:
+                        size_hint_y: None
+                        height: '8dp'
+                        canvas:
+                            Color:
+                                rgba: 0.85, 0.85, 0.85, 1
+                            RoundedRectangle:
+                                pos: self.pos
+                                size: self.width * 0.85, self.height
+                                radius: [2]
+                    Widget:
+                        # Content area
+                        canvas:
+                            Color:
+                                rgba: 0.95, 0.95, 0.95, 1
+                            RoundedRectangle:
+                                pos: self.pos
+                                size: self.size
+                                radius: [4]
+                    Widget:
+                        size_hint_y: None
+                        height: '8dp'
+                        canvas:
+                            Color:
+                                rgba: 0.85, 0.85, 0.85, 1
+                            RoundedRectangle:
+                                pos: self.pos
+                                size: self.width, self.height
+                                radius: [2]
+
+            # Floating action buttons
+            BoxLayout:
+                pos_hint: {'center_x': 0.5, 'y': 0.02}
+                size_hint: 0.8, None
+                height: '72dp'
+                spacing: '16dp'
+
+                # DELETE (Red)
+                Button:
+                    background_color: TRANSPARENT
+                    on_release: root.delete_document()
+                    canvas.before:
+                        Color:
+                            rgba: DANGER_COLOR
+                        Ellipse:
+                            pos: self.center_x - 28, self.center_y - 28
+                            size: 56, 56
+                        Color:
+                            rgba: 1, 1, 1, 0.2
+                        Line:
+                            ellipse: self.center_x - 30, self.center_y - 30, 60, 60
+                    Label:
+                        text: 'DELETE'
+                        font_size: '8sp'
+                        bold: True
+                        color: WHITE
+                        pos_hint: {'center_x': 0.5}
+                        y: self.parent.center_y - 24
+
+                # GRADE (Blue) - larger
+                Button:
+                    background_color: TRANSPARENT
+                    on_release: root.grade_document()
+                    canvas.before:
+                        Color:
+                            rgba: PRIMARY_COLOR
+                        Ellipse:
+                            pos: self.center_x - 34, self.center_y - 34
+                            size: 68, 68
+                        Color:
+                            rgba: 1, 1, 1, 0.2
+                        Line:
+                            ellipse: self.center_x - 36, self.center_y - 36, 72, 72
+                    Label:
+                        text: 'GRADE'
+                        font_size: '10sp'
+                        bold: True
+                        color: WHITE
+                        pos_hint: {'center_x': 0.5}
+                        y: self.parent.center_y - 24
+
+                # PRINT (Green)
+                Button:
+                    background_color: TRANSPARENT
+                    on_release: root.print_document()
+                    canvas.before:
+                        Color:
+                            rgba: SUCCESS_COLOR
+                        Ellipse:
+                            pos: self.center_x - 28, self.center_y - 28
+                            size: 56, 56
+                        Color:
+                            rgba: 1, 1, 1, 0.2
+                        Line:
+                            ellipse: self.center_x - 30, self.center_y - 30, 60, 60
+                    Label:
+                        text: 'PRINT'
+                        font_size: '8sp'
+                        bold: True
+                        color: WHITE
+                        pos_hint: {'center_x': 0.5}
+                        y: self.parent.center_y - 24
+
+            # Success overlay
+            BoxLayout:
+                opacity: 1 if root.show_success else 0
+                orientation: 'vertical'
+                padding: '40dp'
+                canvas.before:
+                    Color:
+                        rgba: 0, 0, 0, 0.8 if root.show_success else 0
+                    Rectangle:
+                        pos: self.pos
+                        size: self.size
+                Widget:
+                Label:
+                    text: 'Task Completed!'
+                    font_size: '18sp'
+                    bold: True
+                    color: SUCCESS_COLOR if root.show_success else TRANSPARENT
+                Widget:

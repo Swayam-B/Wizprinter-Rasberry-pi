@@ -1,0 +1,10 @@
+# WizPrinter Kiosk - Python Dependencies
+# Install with: pip install -r requirements.txt
+
+kivy>=2.3.0
+pillow>=10.0.0
+requests>=2.31.0
+
+# Raspberry Pi specific (uncomment on Pi)
+# kivy[full]
+# RPi.GPIO

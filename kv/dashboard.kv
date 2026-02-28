@@ -1,0 +1,228 @@
+<DashboardScreen>:
+    canvas.before:
+        Color:
+            rgba: BG_DARK
+        Rectangle:
+            pos: self.pos
+            size: self.size
+
+    BoxLayout:
+        orientation: 'vertical'
+
+        # Header bar
+        BoxLayout:
+            size_hint_y: None
+            height: '40dp'
+            padding: ['16dp', '4dp']
+            canvas.before:
+                Color:
+                    rgba: BG_DARK
+                Rectangle:
+                    pos: self.pos
+                    size: self.size
+                Color:
+                    rgba: 0.075, 0.498, 0.925, 0.2
+                Line:
+                    points: [self.x, self.y, self.right, self.y]
+
+            # Left: brand
+            BoxLayout:
+                size_hint_x: 0.4
+                spacing: '8dp'
+                Label:
+                    text: '[P]'
+                    font_size: '16sp'
+                    bold: True
+                    color: PRIMARY_COLOR
+                    size_hint_x: None
+                    width: '24dp'
+                Label:
+                    text: 'WizPrinter'
+                    font_size: '14sp'
+                    bold: True
+                    color: WHITE
+                    text_size: self.size
+                    halign: 'left'
+                    valign: 'middle'
+
+            # Right: status
+            BoxLayout:
+                size_hint_x: 0.6
+                spacing: '8dp'
+                Widget:
+                Widget:
+                    size_hint_x: None
+                    width: '8dp'
+                    canvas:
+                        Color:
+                            rgba: SUCCESS_COLOR
+                        Ellipse:
+                            pos: self.center_x - 4, self.center_y - 4
+                            size: 8, 8
+                Label:
+                    text: 'READY'
+                    font_size: '10sp'
+                    color: 0.4, 0.4, 0.4, 1
+                    size_hint_x: None
+                    width: '40dp'
+                Label:
+                    text: root.current_time
+                    font_size: '12sp'
+                    bold: True
+                    color: WHITE
+                    size_hint_x: None
+                    width: '64dp'
+                    text_size: self.size
+                    halign: 'right'
+                    valign: 'middle'
+
+        # 2x2 Grid
+        GridLayout:
+            cols: 2
+            padding: '12dp'
+            spacing: '12dp'
+
+            # GRADE
+            Button:
+                background_color: TRANSPARENT
+                on_release: root.nav_grade()
+                canvas.before:
+                    Color:
+                        rgba: BG_CARD
+                    RoundedRectangle:
+                        pos: self.pos
+                        size: self.size
+                        radius: [12]
+                    Color:
+                        rgba: 0.3, 0.35, 0.45, 1
+                    Line:
+                        rounded_rectangle: self.x, self.y, self.width, self.height, 12
+                BoxLayout:
+                    orientation: 'vertical'
+                    center: self.parent.center
+                    size: self.parent.size
+                    spacing: '4dp'
+                    Widget:
+                    Label:
+                        text: 'GRADE'
+                        font_size: '24sp'
+                        bold: True
+                        color: PRIMARY_COLOR
+                        size_hint_y: 0.5
+                    Label:
+                        text: 'GRADE'
+                        font_size: '10sp'
+                        bold: True
+                        color: WHITE
+                        letter_spacing: 2
+                        size_hint_y: 0.3
+                    Widget:
+
+            # SCAN
+            Button:
+                background_color: TRANSPARENT
+                on_release: root.nav_scan()
+                canvas.before:
+                    Color:
+                        rgba: BG_CARD
+                    RoundedRectangle:
+                        pos: self.pos
+                        size: self.size
+                        radius: [12]
+                    Color:
+                        rgba: 0.3, 0.35, 0.45, 1
+                    Line:
+                        rounded_rectangle: self.x, self.y, self.width, self.height, 12
+                BoxLayout:
+                    orientation: 'vertical'
+                    center: self.parent.center
+                    size: self.parent.size
+                    Widget:
+                    Label:
+                        text: 'SCAN'
+                        font_size: '24sp'
+                        bold: True
+                        color: PRIMARY_COLOR
+                        size_hint_y: 0.5
+                    Label:
+                        text: 'SCAN'
+                        font_size: '10sp'
+                        bold: True
+                        color: WHITE
+                        letter_spacing: 2
+                        size_hint_y: 0.3
+                    Widget:
+
+            # CLASSES
+            Button:
+                background_color: TRANSPARENT
+                on_release: root.nav_classes()
+                canvas.before:
+                    Color:
+                        rgba: BG_CARD
+                    RoundedRectangle:
+                        pos: self.pos
+                        size: self.size
+                        radius: [12]
+                    Color:
+                        rgba: 0.3, 0.35, 0.45, 1
+                    Line:
+                        rounded_rectangle: self.x, self.y, self.width, self.height, 12
+                BoxLayout:
+                    orientation: 'vertical'
+                    center: self.parent.center
+                    size: self.parent.size
+                    Widget:
+                    Label:
+                        text: 'CLASSES'
+                        font_size: '24sp'
+                        bold: True
+                        color: PRIMARY_COLOR
+                        size_hint_y: 0.5
+                    Label:
+                        text: 'CLASSES'
+                        font_size: '10sp'
+                        bold: True
+                        color: WHITE
+                        letter_spacing: 2
+                        size_hint_y: 0.3
+                    Widget:
+
+            # SETTINGS
+            Button:
+                background_color: TRANSPARENT
+                on_release: root.nav_settings()
+                canvas.before:
+                    Color:
+                        rgba: BG_CARD
+                    RoundedRectangle:
+                        pos: self.pos
+                        size: self.size
+                        radius: [12]
+                    Color:
+                        rgba: 0.3, 0.35, 0.45, 1
+                    Line:
+                        rounded_rectangle: self.x, self.y, self.width, self.height, 12
+                BoxLayout:
+                    orientation: 'vertical'
+                    center: self.parent.center
+                    size: self.parent.size
+                    Widget:
+                    Label:
+                        text: 'SETTINGS'
+                        font_size: '24sp'
+                        bold: True
+                        color: PRIMARY_COLOR
+                        size_hint_y: 0.5
+                    Label:
+                        text: 'SETTINGS'
+                        font_size: '10sp'
+                        bold: True
+                        color: WHITE
+                        letter_spacing: 2
+                        size_hint_y: 0.3
+                    Widget:
+
+        # Bottom nav
+        BottomNav:
+            active_tab: 'home'

@@ -1,0 +1,139 @@
+<ScanScreen>:
+    canvas.before:
+        Color:
+            rgba: BG_DARK
+        Rectangle:
+            pos: self.pos
+            size: self.size
+
+    BoxLayout:
+        orientation: 'vertical'
+
+        # Status bar
+        StatusBar:
+            title: 'Scan Document'
+
+        # Split layout
+        BoxLayout:
+            orientation: 'horizontal'
+
+            # Left: Scan preview
+            BoxLayout:
+                size_hint_x: 0.5
+                orientation: 'vertical'
+                padding: '8dp'
+                spacing: '4dp'
+                canvas.before:
+                    Color:
+                        rgba: 0.043, 0.071, 0.094, 1
+                    Rectangle:
+                        pos: self.pos
+                        size: self.size
+
+                AnchorLayout:
+                    BoxLayout:
+                        size_hint: 0.9, 0.95
+                        canvas.before:
+                            Color:
+                                rgba: 0.102, 0.149, 0.196, 1
+                            RoundedRectangle:
+                                pos: self.pos
+                                size: self.size
+                                radius: [8]
+                        AnchorLayout:
+                            Widget:
+                                size_hint: 0.85, 0.9
+                                canvas:
+                                    Color:
+                                        rgba: 1, 1, 1, 1
+                                    Rectangle:
+                                        pos: self.pos
+                                        size: self.size
+                                    Color:
+                                        rgba: 0.9, 0.9, 0.9, 1
+                                    Rectangle:
+                                        pos: self.x + 4, self.y + 4
+                                        size: self.width - 8, self.height - 8
+
+                Label:
+                    text: root.page_info.upper()
+                    font_size: '8sp'
+                    color: TEXT_MUTED
+                    size_hint_y: None
+                    height: '12dp'
+                    letter_spacing: 2
+
+            # Right: Action buttons
+            BoxLayout:
+                size_hint_x: 0.5
+                orientation: 'vertical'
+                padding: '8dp'
+                spacing: '8dp'
+
+                # Add Page
+                Button:
+                    background_color: TRANSPARENT
+                    on_release: root.add_page()
+                    canvas.before:
+                        Color:
+                            rgba: 0.137, 0.267, 0.388, 1
+                        RoundedRectangle:
+                            pos: self.pos
+                            size: self.size
+                            radius: [8]
+                        Color:
+                            rgba: 0.204, 0.302, 0.388, 1
+                        Line:
+                            rounded_rectangle: self.x, self.y, self.width, self.height, 8
+                    Label:
+                        text: '+ ADD PAGE'
+                        font_size: '10sp'
+                        bold: True
+                        color: WHITE
+                        center: self.parent.center
+
+                # Delete
+                Button:
+                    background_color: TRANSPARENT
+                    on_release: root.delete_page()
+                    canvas.before:
+                        Color:
+                            rgba: 0.137, 0.267, 0.388, 1
+                        RoundedRectangle:
+                            pos: self.pos
+                            size: self.size
+                            radius: [8]
+                        Color:
+                            rgba: 0.204, 0.302, 0.388, 1
+                        Line:
+                            rounded_rectangle: self.x, self.y, self.width, self.height, 8
+                    Label:
+                        text: 'DELETE'
+                        font_size: '10sp'
+                        bold: True
+                        color: WHITE
+                        center: self.parent.center
+
+                # Upload (larger, primary)
+                Button:
+                    size_hint_y: 1.5
+                    background_color: TRANSPARENT
+                    on_release: root.upload()
+                    canvas.before:
+                        Color:
+                            rgba: PRIMARY_COLOR
+                        RoundedRectangle:
+                            pos: self.pos
+                            size: self.size
+                            radius: [8]
+                    Label:
+                        text: 'UPLOAD'
+                        font_size: '14sp'
+                        bold: True
+                        color: WHITE
+                        letter_spacing: 3
+                        center: self.parent.center
+
+        # Bottom nav
+        BottomNav:
+            active_tab: 'scan'

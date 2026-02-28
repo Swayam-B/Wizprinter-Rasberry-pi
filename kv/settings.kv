@@ -1,0 +1,214 @@
+<SettingsScreen>:
+    canvas.before:
+        Color:
+            rgba: BG_DARK
+        Rectangle:
+            pos: self.pos
+            size: self.size
+
+    BoxLayout:
+        orientation: 'vertical'
+
+        # Status bar
+        StatusBar:
+            title: 'System Settings'
+            show_back: True
+
+        # Button stack
+        BoxLayout:
+            orientation: 'vertical'
+            padding: ['24dp', '8dp']
+            spacing: '12dp'
+
+            Widget:
+                size_hint_y: 0.1
+
+            # Time/Region button
+            Button:
+                size_hint_y: None
+                height: '54dp'
+                background_color: TRANSPARENT
+                on_release: root.open_time_region()
+                canvas.before:
+                    Color:
+                        rgba: PRIMARY_COLOR
+                    RoundedRectangle:
+                        pos: self.pos
+                        size: self.size
+                        radius: [12]
+                BoxLayout:
+                    padding: ['16dp', '0dp']
+                    spacing: '12dp'
+                    pos: self.parent.pos
+                    size: self.parent.size
+                    AnchorLayout:
+                        size_hint_x: None
+                        width: '36dp'
+                        Widget:
+                            size_hint: None, None
+                            size: '32dp', '32dp'
+                            canvas:
+                                Color:
+                                    rgba: 1, 1, 1, 0.2
+                                RoundedRectangle:
+                                    pos: self.pos
+                                    size: self.size
+                                    radius: [8]
+                            Label:
+                                text: 'G'
+                                font_size: '14sp'
+                                color: WHITE
+                                center: self.parent.center
+                    Label:
+                        text: 'Change Time/Region'
+                        font_size: '16sp'
+                        bold: True
+                        color: WHITE
+                        text_size: self.size
+                        halign: 'left'
+                        valign: 'middle'
+                    Label:
+                        size_hint_x: None
+                        width: '24dp'
+                        text: '>'
+                        font_size: '18sp'
+                        color: 1, 1, 1, 0.5
+
+            # Network Config button
+            Button:
+                size_hint_y: None
+                height: '54dp'
+                background_color: TRANSPARENT
+                on_release: root.open_network_config()
+                canvas.before:
+                    Color:
+                        rgba: PRIMARY_COLOR
+                    RoundedRectangle:
+                        pos: self.pos
+                        size: self.size
+                        radius: [12]
+                BoxLayout:
+                    padding: ['16dp', '0dp']
+                    spacing: '12dp'
+                    pos: self.parent.pos
+                    size: self.parent.size
+                    AnchorLayout:
+                        size_hint_x: None
+                        width: '36dp'
+                        Widget:
+                            size_hint: None, None
+                            size: '32dp', '32dp'
+                            canvas:
+                                Color:
+                                    rgba: 1, 1, 1, 0.2
+                                RoundedRectangle:
+                                    pos: self.pos
+                                    size: self.size
+                                    radius: [8]
+                            Label:
+                                text: 'N'
+                                font_size: '14sp'
+                                color: WHITE
+                                center: self.parent.center
+                    Label:
+                        text: 'Network Config'
+                        font_size: '16sp'
+                        bold: True
+                        color: WHITE
+                        text_size: self.size
+                        halign: 'left'
+                        valign: 'middle'
+                    Label:
+                        size_hint_x: None
+                        width: '24dp'
+                        text: '>'
+                        font_size: '18sp'
+                        color: 1, 1, 1, 0.5
+
+            # Log Out button
+            Button:
+                size_hint_y: None
+                height: '54dp'
+                background_color: TRANSPARENT
+                on_release: root.logout()
+                canvas.before:
+                    Color:
+                        rgba: BG_CARD
+                    RoundedRectangle:
+                        pos: self.pos
+                        size: self.size
+                        radius: [12]
+                BoxLayout:
+                    padding: ['16dp', '0dp']
+                    spacing: '12dp'
+                    pos: self.parent.pos
+                    size: self.parent.size
+                    AnchorLayout:
+                        size_hint_x: None
+                        width: '36dp'
+                        Widget:
+                            size_hint: None, None
+                            size: '32dp', '32dp'
+                            canvas:
+                                Color:
+                                    rgba: 0.906, 0.298, 0.235, 0.1
+                                RoundedRectangle:
+                                    pos: self.pos
+                                    size: self.size
+                                    radius: [8]
+                            Label:
+                                text: 'X'
+                                font_size: '14sp'
+                                bold: True
+                                color: DANGER_COLOR
+                                center: self.parent.center
+                    Label:
+                        text: 'LOG OUT'
+                        font_size: '16sp'
+                        bold: True
+                        color: WHITE
+                        letter_spacing: 2
+                        text_size: self.size
+                        halign: 'left'
+                        valign: 'middle'
+                    Label:
+                        size_hint_x: None
+                        width: '24dp'
+                        text: 'L'
+                        font_size: '14sp'
+                        color: 0.4, 0.4, 0.4, 1
+
+            Widget:
+
+        # Footer
+        BoxLayout:
+            size_hint_y: None
+            height: '24dp'
+            padding: ['24dp', '0dp', '24dp', '8dp']
+            BoxLayout:
+                spacing: '8dp'
+                Widget:
+                    size_hint_x: None
+                    width: '8dp'
+                    canvas:
+                        Color:
+                            rgba: SUCCESS_COLOR
+                        Ellipse:
+                            pos: self.center_x - 4, self.center_y - 4
+                            size: 8, 8
+                Label:
+                    text: 'PRINTER READY'
+                    font_size: '8sp'
+                    bold: True
+                    color: 0.4, 0.4, 0.4, 1
+                    text_size: self.size
+                    halign: 'left'
+                    valign: 'middle'
+                    letter_spacing: 2
+            Label:
+                text: 'v2.4.0-build.82'
+                font_size: '8sp'
+                color: 0.4, 0.4, 0.4, 1
+                text_size: self.size
+                halign: 'right'
+                valign: 'middle'

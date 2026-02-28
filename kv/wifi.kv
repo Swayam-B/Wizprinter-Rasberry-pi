@@ -1,0 +1,166 @@
+<WifiScreen>:
+    canvas.before:
+        Color:
+            rgba: BG_DARK
+        Rectangle:
+            pos: self.pos
+            size: self.size
+
+    BoxLayout:
+        orientation: 'vertical'
+
+        # Header
+        BoxLayout:
+            size_hint_y: None
+            height: '32dp'
+            padding: ['12dp', '4dp']
+            spacing: '8dp'
+            canvas.before:
+                Color:
+                    rgba: BG_DARK
+                Rectangle:
+                    pos: self.pos
+                    size: self.size
+            Label:
+                text: 'WiFi'
+                font_size: '14sp'
+                bold: True
+                color: PRIMARY_COLOR
+                size_hint_x: None
+                width: '24dp'
+            Label:
+                text: 'SELECT NETWORK'
+                font_size: '12sp'
+                bold: True
+                color: 0.075, 0.498, 0.925, 0.8
+                text_size: self.size
+                halign: 'left'
+                valign: 'middle'
+
+        # Network list area (40%)
+        ScrollView:
+            size_hint_y: 0.4
+            BoxLayout:
+                orientation: 'vertical'
+                size_hint_y: None
+                height: self.minimum_height
+
+                # Selected network
+                Button:
+                    size_hint_y: None
+                    height: '44dp'
+                    background_color: TRANSPARENT
+                    on_release: root.select_network('WizPrinter_Guest')
+                    canvas.before:
+                        Color:
+                            rgba: 0.075, 0.498, 0.925, 0.2
+                        Rectangle:
+                            pos: self.pos
+                            size: self.size
+                        Color:
+                            rgba: PRIMARY_COLOR
+                        Rectangle:
+                            pos: self.pos
+                            size: 4, self.height
+                    Label:
+                        text: 'WizPrinter_Guest'
+                        font_size: '14sp'
+                        bold: True
+                        color: WHITE
+                        center: self.parent.center
+
+                # Other networks
+                Button:
+                    size_hint_y: None
+                    height: '44dp'
+                    background_color: TRANSPARENT
+                    on_release: root.select_network('Office_WiFi')
+                    canvas.before:
+                        Color:
+                            rgba: 1, 1, 1, 0.03
+                        Line:
+                            points: [self.x, self.y, self.right, self.y]
+                    Label:
+                        text: 'Office_WiFi'
+                        font_size: '14sp'
+                        color: WHITE
+                        center: self.parent.center
+
+                Button:
+                    size_hint_y: None
+                    height: '44dp'
+                    background_color: TRANSPARENT
+                    on_release: root.select_network('Public_Net')
+                    canvas.before:
+                        Color:
+                            rgba: 1, 1, 1, 0.03
+                        Line:
+                            points: [self.x, self.y, self.right, self.y]
+                    Label:
+                        text: 'Public_Net'
+                        font_size: '14sp'
+                        color: WHITE
+                        center: self.parent.center
+
+        # Keyboard placeholder area (60%)
+        BoxLayout:
+            size_hint_y: 0.6
+            padding: '16dp'
+            canvas.before:
+                Color:
+                    rgba: 0.086, 0.114, 0.149, 1
+                Rectangle:
+                    pos: self.pos
+                    size: self.size
+
+            BoxLayout:
+                orientation: 'vertical'
+                spacing: '8dp'
+                padding: '16dp'
+                canvas.before:
+                    Color:
+                        rgba: BORDER_COLOR
+                    Line:
+                        rectangle: self.x, self.y, self.width, self.height
+                        dash_length: 8
+                        dash_offset: 4
+
+                Widget:
+                    size_hint_y: 0.3
+
+                Label:
+                    text: 'RESERVED FOR VIRTUAL KEYBOARD'
+                    font_size: '12sp'
+                    bold: True
+                    color: 1, 1, 1, 0.8
+                    size_hint_y: 0.2
+
+                Label:
+                    text: '60% Vertical Space (192px @ 1x)'
+                    font_size: '10sp'
+                    color: BORDER_COLOR
+                    size_hint_y: 0.15
+
+                AnchorLayout:
+                    size_hint_y: 0.25
+                    Button:
+                        size_hint: None, None
+                        size: '160dp', '36dp'
+                        background_color: TRANSPARENT
+                        on_release: root.select_network('WizPrinter_Guest')
+                        canvas.before:
+                            Color:
+                                rgba: PRIMARY_COLOR
+                            RoundedRectangle:
+                                pos: self.pos
+                                size: self.size
+                                radius: [18]
+                        Label:
+                            text: 'TRIGGER KEYBOARD'
+                            font_size: '10sp'
+                            bold: True
+                            color: WHITE
+                            center: self.parent.center
+
+                Widget:
+                    size_hint_y: 0.1

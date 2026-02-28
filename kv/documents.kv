@@ -1,0 +1,181 @@
+#:import App kivy.app.App
+
+<DocumentsScreen>:
+    canvas.before:
+        Color:
+            rgba: BG_DARK
+        Rectangle:
+            pos: self.pos
+            size: self.size
+
+    BoxLayout:
+        orientation: 'vertical'
+
+        # Blue header bar (like mockup)
+        BoxLayout:
+            size_hint_y: None
+            height: '48dp'
+            padding: ['4dp', '0dp']
+            spacing: '4dp'
+            canvas.before:
+                Color:
+                    rgba: PRIMARY_COLOR
+                Rectangle:
+                    pos: self.pos
+                    size: self.size
+            Button:
+                size_hint: None, 1
+                width: '48dp'
+                background_color: TRANSPARENT
+                on_release: root.go_back()
+                Label:
+                    text: '<'
+                    font_size: '24sp'
+                    bold: True
+                    color: WHITE
+                    center: self.parent.center
+            Label:
+                text: 'Select Document'
+                font_size: '16sp'
+                bold: True
+                color: WHITE
+                text_size: self.size
+                halign: 'left'
+                valign: 'middle'
+
+        # Document list
+        ScrollView:
+            BoxLayout:
+                orientation: 'vertical'
+                size_hint_y: None
+                height: self.minimum_height
+
+                _DocItem:
+                    doc_name: 'Resume_Final.pdf'
+                    doc_meta: '1.2 MB  -  PDF Document'
+                    doc_icon: 'PDF'
+                    on_release: root.select_document('Resume_Final.pdf')
+
+                _DocItem:
+                    doc_name: 'Boarding_Pass.png'
+                    doc_meta: '450 KB  -  PNG Image'
+                    doc_icon: 'IMG'
+                    on_release: root.select_document('Boarding_Pass.png')
+
+                _DocItem:
+                    doc_name: 'Contract_Draft.docx'
+                    doc_meta: '2.1 MB  -  Word Doc'
+                    doc_icon: 'DOC'
+                    on_release: root.select_document('Contract_Draft.docx')
+
+                _DocItem:
+                    doc_name: 'Photo_ID.jpg'
+                    doc_meta: '890 KB  -  JPEG Image'
+                    doc_icon: 'JPG'
+                    on_release: root.select_document('Photo_ID.jpg')
+
+                _DocItem:
+                    doc_name: 'Notes_Meeting.txt'
+                    doc_meta: '12 KB  -  Text File'
+                    doc_icon: 'TXT'
+                    on_release: root.select_document('Notes_Meeting.txt')
+
+        # Footer
+        BoxLayout:
+            size_hint_y: None
+            height: '32dp'
+            padding: ['16dp', '4dp']
+            canvas.before:
+                Color:
+                    rgba: BG_DARK
+                Rectangle:
+                    pos: self.pos
+                    size: self.size
+                Color:
+                    rgba: 1, 1, 1, 0.1
+                Line:
+                    points: [self.x, self.top, self.right, self.top]
+            Label:
+                text: '5 files found'
+                font_size: '10sp'
+                color: 0.4, 0.4, 0.4, 1
+                text_size: self.size
+                halign: 'left'
+                valign: 'middle'
+            Label:
+                text: 'USB  WiFi'
+                font_size: '10sp'
+                color: PRIMARY_COLOR
+                text_size: self.size
+                halign: 'right'
+                valign: 'middle'
+
+
+<_DocItem@Button>:
+    doc_name: ''
+    doc_meta: ''
+    doc_icon: ''
+    size_hint_y: None
+    height: '64dp'
+    background_color: TRANSPARENT
+    canvas.before:
+        Color:
+            rgba: 1, 1, 1, 0.03
+        Line:
+            points: [self.x, self.y, self.right, self.y]
+
+    BoxLayout:
+        padding: ['16dp', '8dp']
+        spacing: '12dp'
+        pos: self.parent.pos
+        size: self.parent.size
+
+        # Icon
+        AnchorLayout:
+            size_hint_x: None
+            width: '44dp'
+            Widget:
+                size_hint: None, None
+                size: '44dp', '44dp'
+                canvas:
+                    Color:
+                        rgba: 0.075, 0.498, 0.925, 0.15
+                    RoundedRectangle:
+                        pos: self.pos
+                        size: self.size
+                        radius: [8]
+                Label:
+                    text: root.doc_icon
+                    font_size: '11sp'
+                    bold: True
+                    color: PRIMARY_COLOR
+                    center: self.parent.center
+
+        # Text
+        BoxLayout:
+            orientation: 'vertical'
+            spacing: '2dp'
+            Label:
+                text: root.doc_name
+                font_size: '14sp'
+                bold: True
+                color: WHITE
+                text_size: self.size
+                halign: 'left'
+                valign: 'bottom'
+                shorten: True
+            Label:
+                text: root.doc_meta
+                font_size: '11sp'
+                color: TEXT_MUTED
+                text_size: self.size
+                halign: 'left'
+                valign: 'top'
+
+        # Chevron
+        Label:
+            size_hint_x: None
+            width: '24dp'
+            text: '>'
+            font_size: '20sp'
+            color: PRIMARY_COLOR

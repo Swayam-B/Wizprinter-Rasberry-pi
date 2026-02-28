@@ -1,0 +1,122 @@
+#:import App kivy.app.App
+
+# ─── StatusBar Widget ────────────────────────────────────────
+<StatusBar>:
+    orientation: 'horizontal'
+    size_hint_y: None
+    height: '40dp'
+    padding: ['8dp', '4dp']
+    spacing: '4dp'
+    canvas.before:
+        Color:
+            rgba: BG_DARK
+        Rectangle:
+            pos: self.pos
+            size: self.size
+        Color:
+            rgba: 1, 1, 1, 0.1
+        Line:
+            points: [self.x, self.y, self.right, self.y]
+            width: 1
+
+    # Back button (conditional)
+    Button:
+        size_hint: None, 1
+        width: '36dp' if root.show_back else '0dp'
+        opacity: 1 if root.show_back else 0
+        disabled: not root.show_back
+        background_color: TRANSPARENT
+        on_release: root.go_back()
+        Label:
+            text: '<'
+            font_size: '20sp'
+            bold: True
+            color: PRIMARY_COLOR
+            center: self.parent.center
+
+    # Title
+    Label:
+        text: root.title
+        font_size: '14sp'
+        bold: True
+        color: WHITE
+        text_size: self.size
+        halign: 'left' if root.show_back else 'center'
+        valign: 'middle'
+
+    # WiFi indicator
+    Label:
+        size_hint: None, 1
+        width: '24dp' if root.show_wifi else '0dp'
+        text: 'W'
+        font_size: '12sp'
+        color: WHITE
+        opacity: 0.7 if root.show_wifi else 0
+
+
+# ─── BottomNav Widget ────────────────────────────────────────
+<BottomNav>:
+    orientation: 'horizontal'
+    size_hint_y: None
+    height: '48dp'
+    padding: ['16dp', '0dp']
+    canvas.before:
+        Color:
+            rgba: BG_DARK
+        Rectangle:
+            pos: self.pos
+            size: self.size
+        Color:
+            rgba: 1, 1, 1, 0.1
+        Line:
+            points: [self.x, self.top, self.right, self.top]
+            width: 1
+
+    _NavButton:
+        text: 'Home'
+        icon_text: 'H'
+        is_active: root.active_tab == 'home'
+        on_release: root.navigate('home')
+
+    _NavButton:
+        text: 'Docs'
+        icon_text: 'D'
+        is_active: root.active_tab == 'docs'
+        on_release: root.navigate('docs')
+
+    _NavButton:
+        text: 'Scan'
+        icon_text: 'S'
+        is_active: root.active_tab == 'scan'
+        on_release: root.navigate('scan')
+
+    _NavButton:
+        text: 'Settings'
+        icon_text: 'G'
+        is_active: root.active_tab == 'settings'
+        on_release: root.navigate('settings')
+
+
+<_NavButton@Button>:
+    icon_text: ''
+    is_active: False
+    background_color: TRANSPARENT
+    size_hint: 1, 1
+    BoxLayout:
+        orientation: 'vertical'
+        center: self.parent.center
+        size: self.parent.size
+        spacing: '2dp'
+        padding: ['0dp', '4dp']
+        Label:
+            text: root.icon_text
+            font_size: '16sp'
+            bold: True
+            color: PRIMARY_COLOR if root.is_active else (0.4, 0.4, 0.5, 1)
+            size_hint_y: 0.6
+        Label:
+            text: root.text
+            font_size: '10sp'
+            bold: True
+            color: PRIMARY_COLOR if root.is_active else (0.4, 0.4, 0.5, 1)
+            size_hint_y: 0.4

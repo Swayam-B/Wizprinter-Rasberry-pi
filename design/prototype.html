@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Class Selection Screen</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#137fec",
+                        "background-light": "#f6f7f8",
+                        "background-dark": "#101922",
+                    },
+                    fontFamily: {
+                        "display": ["Public Sans", "sans-serif"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                },
+            },
+        }
+    </script>
+<style>body {
+    font-family: "Public Sans", sans-serif;
+    -webkit-tap-highlight-color: transparent
+    }
+/* Custom scrollbar for small screen */
+.custom-scrollbar::-webkit-scrollbar {
+    width: 4px
+    }
+.custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent
+    }
+.custom-scrollbar::-webkit-scrollbar-thumb {
+    background: #324d67;
+    border-radius: 10px
+    }
+/* Spinner style override for select */
+.ios-select {
+    appearance: none;
+    background-image: url(https://lh3.googleusercontent.com/aida-public/AB6AXuApkAyyPtuGfPKT9p5gCRvjS9U-WOmD6TIStKq3vKlJ8WPzgGT4RXkwyXgmJkBgd5cmtrLltSK7fduhE4-RF73WO5TBMPKs1x3iJ7gWjbbs6B7xzRQBt5X8acTFZTm76JZqHMOEK0MkrU-zpkdWbuRkzCvVU_HyXd1y95Bdhk_OcVU5ZQBdUtn3El0orG_H90M7s3CzHbHUv5Q4fO88J8d9pw1h-w6mPhzqwdYpkAhadyycg5qvrf8w8GOPbed-FMHUV8Z6IUxA4DM);
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    background-size: 20px
+    }</style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark text-white font-display overflow-hidden">
+<!-- Main Kiosk Container: Optimized for 480x320 landscape -->
+<div class="relative flex h-[320px] w-[480px] flex-col mx-auto overflow-hidden bg-background-light dark:bg-background-dark border-x border-gray-800">
+<!-- TopAppBar: Fixed Status Bar -->
+<div class="flex items-center bg-background-light dark:bg-background-dark p-2 border-b border-[#324d67]/30 shrink-0">
+<div class="flex items-center justify-center w-10 h-10 cursor-pointer active:opacity-50">
+<span class="material-symbols-outlined text-primary text-[28px]">chevron_left</span>
+</div>
+<h2 class="text-white text-base font-bold leading-tight tracking-tight flex-1 pl-1">Class Selection</h2>
+<div class="w-10"></div> <!-- Spacer for balance -->
+</div>
+<!-- Scrollable Content Area -->
+<div class="flex-1 overflow-y-auto custom-scrollbar px-4 py-2 space-y-3">
+<!-- Semester Spinner -->
+<div class="flex flex-col">
+<p class="text-[#92adc9] text-xs font-medium pb-1 uppercase tracking-wider pl-1">Semester</p>
+<div class="relative">
+<select class="ios-select flex w-full cursor-pointer rounded-lg text-white focus:outline-0 focus:ring-2 focus:ring-primary border border-[#324d67] bg-[#192633] h-12 px-3 text-sm font-normal appearance-none">
+<option disabled="" selected="" value="">Select Semester</option>
+<option value="fall24">Fall 2024</option>
+<option value="spring25">Spring 2025</option>
+<option value="summer25">Summer 2025</option>
+</select>
+</div>
+</div>
+<!-- Subject Spinner -->
+<div class="flex flex-col">
+<p class="text-[#92adc9] text-xs font-medium pb-1 uppercase tracking-wider pl-1">Subject</p>
+<div class="relative">
+<select class="ios-select flex w-full cursor-pointer rounded-lg text-white focus:outline-0 focus:ring-2 focus:ring-primary border border-[#324d67] bg-[#192633] h-12 px-3 text-sm font-normal appearance-none">
+<option disabled="" selected="" value="">Select Subject</option>
+<option value="cs">Computer Science</option>
+<option value="math">Mathematics</option>
+<option value="phys">Physics</option>
+<option value="arts">Digital Arts</option>
+</select>
+</div>
+</div>
+<!-- Class Spinner -->
+<div class="flex flex-col pb-2">
+<p class="text-[#92adc9] text-xs font-medium pb-1 uppercase tracking-wider pl-1">Class</p>
+<div class="relative">
+<select class="ios-select flex w-full cursor-pointer rounded-lg text-white focus:outline-0 focus:ring-2 focus:ring-primary border border-[#324d67] bg-[#192633] h-12 px-3 text-sm font-normal appearance-none">
+<option disabled="" selected="" value="">Select Class</option>
+<option value="101">CS101 - Intro to Programming</option>
+<option value="202">CS202 - Data Structures</option>
+<option value="303">CS303 - UI/UX Design</option>
+</select>
+</div>
+</div>
+</div>
+<!-- Bottom Action Button -->
+<div class="p-4 bg-background-light dark:bg-background-dark border-t border-[#324d67]/30 shrink-0">
+<button class="flex w-full cursor-pointer items-center justify-center overflow-hidden rounded-xl h-12 px-5 bg-primary text-white text-sm font-bold leading-normal tracking-[0.05em] uppercase active:scale-[0.98] transition-transform shadow-lg shadow-primary/20">
+<span class="truncate">SELECT CLASS</span>
+</button>
+</div>
+</div>
+<!-- Hidden gradient background for the overall page display -->
+<div class="fixed inset-0 -z-10 bg-gradient-to-br from-[#0b0f14] to-[#1a2a3a]"></div>
+</body></html>

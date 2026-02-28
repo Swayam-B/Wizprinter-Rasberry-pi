@@ -1,0 +1,130 @@
+<ClassesScreen>:
+    canvas.before:
+        Color:
+            rgba: BG_DARK
+        Rectangle:
+            pos: self.pos
+            size: self.size
+
+    BoxLayout:
+        orientation: 'vertical'
+
+        # StatusBar
+        StatusBar:
+            title: 'Class Selection'
+            show_back: True
+
+        # Scrollable form
+        ScrollView:
+            BoxLayout:
+                orientation: 'vertical'
+                padding: ['16dp', '8dp']
+                spacing: '12dp'
+                size_hint_y: None
+                height: self.minimum_height
+
+                # Semester
+                BoxLayout:
+                    orientation: 'vertical'
+                    size_hint_y: None
+                    height: '52dp'
+                    spacing: '4dp'
+                    Label:
+                        text: 'SEMESTER'
+                        font_size: '10sp'
+                        color: TEXT_MUTED
+                        size_hint_y: None
+                        height: '14dp'
+                        text_size: self.size
+                        halign: 'left'
+                    Spinner:
+                        id: semester_spinner
+                        text: 'Select Semester'
+                        values: root.semesters
+                        size_hint_y: None
+                        height: '36dp'
+                        background_color: BG_SURFACE
+                        color: WHITE
+                        font_size: '13sp'
+
+                # Subject
+                BoxLayout:
+                    orientation: 'vertical'
+                    size_hint_y: None
+                    height: '52dp'
+                    spacing: '4dp'
+                    Label:
+                        text: 'SUBJECT'
+                        font_size: '10sp'
+                        color: TEXT_MUTED
+                        size_hint_y: None
+                        height: '14dp'
+                        text_size: self.size
+                        halign: 'left'
+                    Spinner:
+                        id: subject_spinner
+                        text: 'Select Subject'
+                        values: root.subjects
+                        size_hint_y: None
+                        height: '36dp'
+                        background_color: BG_SURFACE
+                        color: WHITE
+                        font_size: '13sp'
+
+                # Class
+                BoxLayout:
+                    orientation: 'vertical'
+                    size_hint_y: None
+                    height: '52dp'
+                    spacing: '4dp'
+                    Label:
+                        text: 'CLASS'
+                        font_size: '10sp'
+                        color: TEXT_MUTED
+                        size_hint_y: None
+                        height: '14dp'
+                        text_size: self.size
+                        halign: 'left'
+                    Spinner:
+                        id: class_spinner
+                        text: 'Select Class'
+                        values: root.classes
+                        size_hint_y: None
+                        height: '36dp'
+                        background_color: BG_SURFACE
+                        color: WHITE
+                        font_size: '13sp'
+
+        # Bottom action button
+        BoxLayout:
+            size_hint_y: None
+            height: '56dp'
+            padding: ['16dp', '8dp']
+            canvas.before:
+                Color:
+                    rgba: BG_DARK
+                Rectangle:
+                    pos: self.pos
+                    size: self.size
+                Color:
+                    rgba: 1, 1, 1, 0.05
+                Line:
+                    points: [self.x, self.top, self.right, self.top]
+
+            Button:
+                background_color: TRANSPARENT
+                on_release: root.select_class()
+                canvas.before:
+                    Color:
+                        rgba: PRIMARY_COLOR
+                    RoundedRectangle:
+                        pos: self.pos
+                        size: self.size
+                        radius: [12]
+                Label:
+                    text: 'SELECT CLASS'
+                    font_size: '14sp'
+                    bold: True
+                    color: WHITE
+                    letter_spacing: 1
+                    center: self.parent.center

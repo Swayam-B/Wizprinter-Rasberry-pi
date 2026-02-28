@@ -1,0 +1,112 @@
+<LandingScreen>:
+    canvas.before:
+        Color:
+            rgba: 0, 0, 0, 1
+        Rectangle:
+            pos: self.pos
+            size: self.size
+
+    BoxLayout:
+        orientation: 'vertical'
+        padding: ['16dp', '24dp']
+        spacing: '8dp'
+
+        # Top spacer
+        Widget:
+            size_hint_y: 0.15
+
+        # Branding area
+        BoxLayout:
+            orientation: 'vertical'
+            size_hint_y: 0.45
+            spacing: '4dp'
+
+            # Icon circle
+            AnchorLayout:
+                size_hint_y: 0.5
+                Widget:
+                    size_hint: None, None
+                    size: '64dp', '64dp'
+                    canvas:
+                        Color:
+                            rgba: 0.075, 0.498, 0.925, 0.15
+                        Ellipse:
+                            pos: self.pos
+                            size: self.size
+                    Label:
+                        text: '[P]'
+                        font_size: '28sp'
+                        bold: True
+                        color: PRIMARY_COLOR
+                        center: self.parent.center
+
+            Label:
+                text: 'WizPrinter'
+                font_size: '42sp'
+                bold: True
+                color: WHITE
+                size_hint_y: 0.3
+
+            Label:
+                text: 'SELF-SERVICE PRINTING'
+                font_size: '12sp'
+                color: 1, 1, 1, 0.4
+                letter_spacing: 3
+                size_hint_y: 0.15
+
+        # TAP TO START button
+        Button:
+            size_hint_y: 0.3
+            background_color: TRANSPARENT
+            on_release: root.on_tap_start()
+            canvas.before:
+                Color:
+                    rgba: PRIMARY_COLOR
+                RoundedRectangle:
+                    pos: self.pos
+                    size: self.size
+                    radius: [12]
+            Label:
+                text: 'TAP TO START'
+                font_size: '22sp'
+                bold: True
+                color: WHITE
+                center: self.parent.center
+
+        # Page indicator dots
+        BoxLayout:
+            size_hint_y: 0.05
+            spacing: '6dp'
+            AnchorLayout:
+                BoxLayout:
+                    size_hint: None, None
+                    size: '30dp', '6dp'
+                    spacing: '6dp'
+                    pos_hint: {'center_x': 0.5}
+                    Widget:
+                        size_hint: None, None
+                        size: '6dp', '6dp'
+                        canvas:
+                            Color:
+                                rgba: PRIMARY_COLOR
+                            Ellipse:
+                                pos: self.pos
+                                size: self.size
+                    Widget:
+                        size_hint: None, None
+                        size: '6dp', '6dp'
+                        canvas:
+                            Color:
+                                rgba: 1, 1, 1, 0.2
+                            Ellipse:
+                                pos: self.pos
+                                size: self.size
+                    Widget:
+                        size_hint: None, None
+                        size: '6dp', '6dp'
+                        canvas:
+                            Color:
+                                rgba: 1, 1, 1, 0.2
+                            Ellipse:
+                                pos: self.pos
+                                size: self.size
