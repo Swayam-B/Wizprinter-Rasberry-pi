@@ -1,3 +1,5 @@
+#:import dp kivy.metrics.dp
+
 <DashboardScreen>:
     canvas.before:
         Color:
@@ -9,6 +11,7 @@
     BoxLayout:
         orientation: 'vertical'
 
+        # Header bar
         BoxLayout:
             size_hint_y: None
             height: dp(50)
@@ -23,6 +26,8 @@
                     rgba: 0.075, 0.498, 0.925, 0.2
                 Line:
                     points: [self.x, self.y, self.right, self.y]
+            
+            # Left: brand
             BoxLayout:
                 size_hint_x: 0.4
                 spacing: dp(8)
@@ -75,11 +80,20 @@
                     halign: 'right'
                     valign: 'middle'
                     text_size: self.size
+
+        # 2x2 Grid Area - Now fills all remaining space
         GridLayout:
             cols: 2
             padding: dp(16)
             spacing: dp(16)
+            size_hint_y: 1
+
+            # GRADE
             Button:
+                text: 'GRADE'
+                font_size: '22sp'
+                bold: True
+                color: PRIMARY_COLOR
                 background_color: 0, 0, 0, 0
                 on_release: root.nav_grade()
                 canvas.before:
@@ -93,23 +107,13 @@
                         rgba: 0.3, 0.35, 0.45, 1
                     Line:
                         rounded_rectangle: [self.x, self.y, self.width, self.height, 12]
-                
-                BoxLayout:
-                    orientation: 'vertical'
-                    pos: self.parent.pos
-                    size: self.parent.size
-                    padding: dp(10)
-                    Label:
-                        text: 'GRADE'
-                        font_size: '22sp'
-                        bold: True
-                        color: PRIMARY_COLOR
-                    Label:
-                        text: 'grade'
-                        font_size: '12sp'
-                        color: WHITE
-                        opacity: 0.6
+
+            # SCAN
             Button:
+                text: 'SCAN'
+                font_size: '22sp'
+                bold: True
+                color: PRIMARY_COLOR
                 background_color: 0, 0, 0, 0
                 on_release: root.nav_scan()
                 canvas.before:
@@ -123,23 +127,13 @@
                         rgba: 0.3, 0.35, 0.45, 1
                     Line:
                         rounded_rectangle: [self.x, self.y, self.width, self.height, 12]
-                
-                BoxLayout:
-                    orientation: 'vertical'
-                    pos: self.parent.pos
-                    size: self.parent.size
-                    padding: dp(10)
-                    Label:
-                        text: 'SCAN'
-                        font_size: '22sp'
-                        bold: True
-                        color: PRIMARY_COLOR
-                    Label:
-                        text: 'scan'
-                        font_size: '12sp'
-                        color: WHITE
-                        opacity: 0.6
+
+            # CLASSES
             Button:
+                text: 'CLASSES'
+                font_size: '22sp'
+                bold: True
+                color: PRIMARY_COLOR
                 background_color: 0, 0, 0, 0
                 on_release: root.nav_classes()
                 canvas.before:
@@ -153,23 +147,13 @@
                         rgba: 0.3, 0.35, 0.45, 1
                     Line:
                         rounded_rectangle: [self.x, self.y, self.width, self.height, 12]
-                
-                BoxLayout:
-                    orientation: 'vertical'
-                    pos: self.parent.pos
-                    size: self.parent.size
-                    padding: dp(10)
-                    Label:
-                        text: 'CLASSES'
-                        font_size: '22sp'
-                        bold: True
-                        color: PRIMARY_COLOR
-                    Label:
-                        text: 'classes'
-                        font_size: '12sp'
-                        color: WHITE
-                        opacity: 0.6
+
+            # SETTINGS
             Button:
+                text: 'SETTINGS'
+                font_size: '22sp'
+                bold: True
+                color: PRIMARY_COLOR
                 background_color: 0, 0, 0, 0
                 on_release: root.nav_settings()
                 canvas.before:
@@ -183,23 +167,5 @@
                         rgba: 0.3, 0.35, 0.45, 1
                     Line:
                         rounded_rectangle: [self.x, self.y, self.width, self.height, 12]
-                
-                BoxLayout:
-                    orientation: 'vertical'
-                    pos: self.parent.pos
-                    size: self.parent.size
-                    padding: dp(10)
-                    Label:
-                        text: 'SETTINGS'
-                        font_size: '22sp'
-                        bold: True
-                        color: PRIMARY_COLOR
-                    Label:
-                        text: 'settings'
-                        font_size: '12sp'
-                        color: WHITE
-                        opacity: 0.6
-        BottomNav:
-            active_tab: 'home'
-            size_hint_y: None
-            height: dp(60)
+
+        # NOTE: BottomNav removed completely to expand the grid

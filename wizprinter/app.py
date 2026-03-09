@@ -6,7 +6,7 @@ Main application class with screen management.
 import os
 from kivy.app import App
 from kivy.lang import Builder
-from kivy.uix.screenmanager import ScreenManager, SlideTransition, NoTransition
+from kivy.uix.screenmanager import ScreenManager, FadeTransition, NoTransition
 from kivy.core.window import Window
 
 from wizprinter.theme import BG_DARK, SCREEN_W, SCREEN_H
@@ -67,7 +67,7 @@ class WizPrinterApp(App):
         print("--- DEBUG: KV Loading Complete ---")
 
         # Create screen manager
-        sm = ScreenManager(transition=SlideTransition(duration=0.2))
+        sm = ScreenManager(transition=FadeTransition(duration=0.15))
         
         # We wrap these in try/except to catch exactly which screen fails
         try:
@@ -89,10 +89,10 @@ class WizPrinterApp(App):
 
     def navigate(self, screen_name, direction='left'):
         """Navigate to a screen with transition direction."""
-        self.root.transition = SlideTransition(direction=direction, duration=0.2)
+        self.root.transition = FadeTransition(duration=0.15)
         self.root.current = screen_name
 
     def go_back(self):
         """Navigate back (right slide transition)."""
-        self.root.transition = SlideTransition(direction='right', duration=0.2)
+        self.root.transition = FadeTransition(dduration=0.15)
         self.root.current = self.root.previous()

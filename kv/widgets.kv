@@ -1,6 +1,34 @@
 <StatusBar>:
+    title: ''
     orientation: 'horizontal'
-<BottomNav>:
-    orientation: 'horizontal'
+    size_hint_y: None
+    height: dp(45)
+    padding: [dp(5), 0]
+
     Button:
-        text: "Test"
+        size_hint: None, None
+        size: dp(50), dp(45)
+        background_color: 0, 0, 0, 0
+        on_release: 
+            app.root.transition.direction = 'right'
+            app.root.current = 'dashboard'
+        
+        canvas.after:
+            Color:
+                rgba: PRIMARY_COLOR
+            # THE ROOF: Lowered the peak to prevent clipping
+            Triangle:
+                points: [self.x + dp(15), self.y + dp(22), self.right - dp(15), self.y + dp(22), self.center_x, self.y + dp(34)]
+            # THE BASE: Adjusted to sit flush with the roof
+            Rectangle:
+                pos: self.center_x - dp(7), self.y + dp(12)
+                size: dp(14), dp(10)
+
+    Label:
+        text: root.title
+        font_size: '14sp'
+        bold: True
+        color: WHITE
+        halign: 'left'
+        valign: 'middle'
+        text_size: self.size
