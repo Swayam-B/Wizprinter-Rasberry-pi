@@ -22,7 +22,13 @@ class ClassesScreen(Screen):
 
     def select_class(self):
         """Confirm class selection and navigate to documents."""
-        App.get_running_app().navigate('documents')
+        if (self.selected_semester and self.selected_semester != 'Select Semester' and
+            self.selected_subject and self.selected_subject != 'Select Subject' and
+            self.selected_class and self.selected_class != 'Select Class'):
+            App.get_running_app().navigate('documents')
+        else:
+            # TODO: Show user feedback that all fields must be selected
+            print('Please select semester, subject, and class before continuing.')
 
     def go_back(self):
         App.get_running_app().navigate('dashboard', direction='right')

@@ -49,6 +49,7 @@
                         background_color: (0.15, 0.18, 0.22, 1)
                         color: (1, 1, 1, 1)
                         font_size: '13sp'
+                        on_text: root.selected_semester = self.text
 
                 BoxLayout:
                     orientation: 'vertical'
@@ -73,6 +74,7 @@
                         background_color: (0.15, 0.18, 0.22, 1)
                         color: (1, 1, 1, 1)
                         font_size: '13sp'
+                        on_text: root.selected_subject = self.text
 
                 BoxLayout:
                     orientation: 'vertical'
@@ -97,6 +99,7 @@
                         background_color: (0.15, 0.18, 0.22, 1)
                         color: (1, 1, 1, 1)
                         font_size: '13sp'
+                        on_text: root.selected_class = self.text
 
                 Widget:
                     size_hint_y: None
