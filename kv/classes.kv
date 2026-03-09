@@ -9,32 +9,34 @@
     BoxLayout:
         orientation: 'vertical'
 
-        # StatusBar
         StatusBar:
+            size_hint_y: None
+            height: dp(40)
             title: 'Class Selection'
             show_back: True
 
-        # Scrollable form
         ScrollView:
+            size_hint_y: 1
+            do_scroll_x: False
+            
             BoxLayout:
                 orientation: 'vertical'
-                padding: ['16dp', '8dp']
-                spacing: '12dp'
+                padding: [dp(16), dp(12)]
+                spacing: dp(16)
                 size_hint_y: None
                 height: self.minimum_height
 
-                # Semester
                 BoxLayout:
                     orientation: 'vertical'
                     size_hint_y: None
-                    height: '52dp'
-                    spacing: '4dp'
+                    height: dp(55)
+                    spacing: dp(4)
                     Label:
                         text: 'SEMESTER'
-                        font_size: '10sp'
-                        color: TEXT_MUTED
+                        font_size: '11sp'
+                        color: (1, 1, 1, 0.5)
                         size_hint_y: None
-                        height: '14dp'
+                        height: dp(15)
                         text_size: self.size
                         halign: 'left'
                     Spinner:
@@ -42,23 +44,23 @@
                         text: 'Select Semester'
                         values: root.semesters
                         size_hint_y: None
-                        height: '36dp'
-                        background_color: BG_SURFACE
-                        color: WHITE
+                        height: dp(36)
+                        background_normal: ''
+                        background_color: (0.15, 0.18, 0.22, 1)
+                        color: (1, 1, 1, 1)
                         font_size: '13sp'
 
-                # Subject
                 BoxLayout:
                     orientation: 'vertical'
                     size_hint_y: None
-                    height: '52dp'
-                    spacing: '4dp'
+                    height: dp(55)
+                    spacing: dp(4)
                     Label:
                         text: 'SUBJECT'
-                        font_size: '10sp'
-                        color: TEXT_MUTED
+                        font_size: '11sp'
+                        color: (1, 1, 1, 0.5)
                         size_hint_y: None
-                        height: '14dp'
+                        height: dp(15)
                         text_size: self.size
                         halign: 'left'
                     Spinner:
@@ -66,23 +68,23 @@
                         text: 'Select Subject'
                         values: root.subjects
                         size_hint_y: None
-                        height: '36dp'
-                        background_color: BG_SURFACE
-                        color: WHITE
+                        height: dp(36)
+                        background_normal: ''
+                        background_color: (0.15, 0.18, 0.22, 1)
+                        color: (1, 1, 1, 1)
                         font_size: '13sp'
 
-                # Class
                 BoxLayout:
                     orientation: 'vertical'
                     size_hint_y: None
-                    height: '52dp'
-                    spacing: '4dp'
+                    height: dp(55)
+                    spacing: dp(4)
                     Label:
                         text: 'CLASS'
-                        font_size: '10sp'
-                        color: TEXT_MUTED
+                        font_size: '11sp'
+                        color: (1, 1, 1, 0.5)
                         size_hint_y: None
-                        height: '14dp'
+                        height: dp(15)
                         text_size: self.size
                         halign: 'left'
                     Spinner:
@@ -90,41 +92,38 @@
                         text: 'Select Class'
                         values: root.classes
                         size_hint_y: None
-                        height: '36dp'
-                        background_color: BG_SURFACE
-                        color: WHITE
+                        height: dp(36)
+                        background_normal: ''
+                        background_color: (0.15, 0.18, 0.22, 1)
+                        color: (1, 1, 1, 1)
                         font_size: '13sp'
 
-        # Bottom action button
+                Widget:
+                    size_hint_y: None
+                    height: dp(20)
+
         BoxLayout:
             size_hint_y: None
-            height: '56dp'
-            padding: ['16dp', '8dp']
+            height: dp(50)
+            padding: [dp(16), dp(6)]
             canvas.before:
                 Color:
-                    rgba: BG_DARK
-                Rectangle:
-                    pos: self.pos
-                    size: self.size
-                Color:
-                    rgba: 1, 1, 1, 0.05
+                    rgba: (1, 1, 1, 0.1)
                 Line:
                     points: [self.x, self.top, self.right, self.top]
+                    width: 1
 
             Button:
-                background_color: TRANSPARENT
+                text: 'SELECT CLASS'
+                font_size: '14sp'
+                bold: True
+                background_normal: ''
+                background_color: (0, 0, 0, 0)
                 on_release: root.select_class()
                 canvas.before:
                     Color:
-                        rgba: PRIMARY_COLOR
+                        rgba: (0.075, 0.498, 0.925, 1)
                     RoundedRectangle:
                         pos: self.pos
                         size: self.size
-                        radius: [12]
-                Label:
-                    text: 'SELECT CLASS'
-                    font_size: '14sp'
-                    bold: True
-                    color: WHITE
-                    letter_spacing: 1
-                    center: self.parent.center
+                        radius: [10]

@@ -9,11 +9,10 @@
     BoxLayout:
         orientation: 'vertical'
 
-        # Header bar
         BoxLayout:
             size_hint_y: None
-            height: '40dp'
-            padding: ['16dp', '4dp']
+            height: dp(50)
+            padding: [dp(16), dp(8)]
             canvas.before:
                 Color:
                     rgba: BG_DARK
@@ -24,67 +23,64 @@
                     rgba: 0.075, 0.498, 0.925, 0.2
                 Line:
                     points: [self.x, self.y, self.right, self.y]
-
-            # Left: brand
             BoxLayout:
                 size_hint_x: 0.4
-                spacing: '8dp'
+                spacing: dp(8)
                 Label:
                     text: '[P]'
-                    font_size: '16sp'
+                    font_size: '18sp'
                     bold: True
                     color: PRIMARY_COLOR
                     size_hint_x: None
-                    width: '24dp'
+                    width: dp(30)
                 Label:
                     text: 'WizPrinter'
-                    font_size: '14sp'
+                    font_size: '16sp'
                     bold: True
                     color: WHITE
-                    text_size: self.size
                     halign: 'left'
                     valign: 'middle'
+                    text_size: self.size
 
             # Right: status
             BoxLayout:
                 size_hint_x: 0.6
-                spacing: '8dp'
+                spacing: dp(8)
                 Widget:
                 Widget:
-                    size_hint_x: None
-                    width: '8dp'
+                    size_hint: None, None
+                    size: dp(10), dp(10)
+                    pos_hint: {'center_y': 0.5}
                     canvas:
                         Color:
                             rgba: SUCCESS_COLOR
                         Ellipse:
-                            pos: self.center_x - 4, self.center_y - 4
-                            size: 8, 8
+                            pos: self.pos
+                            size: dp(8), dp(8)
+                
                 Label:
                     text: 'READY'
-                    font_size: '10sp'
-                    color: 0.4, 0.4, 0.4, 1
+                    font_size: '12sp'
+                    color: 1, 1, 1, 0.5
                     size_hint_x: None
-                    width: '40dp'
+                    width: dp(50)
+                
                 Label:
                     text: root.current_time
-                    font_size: '12sp'
+                    font_size: '14sp'
                     bold: True
                     color: WHITE
                     size_hint_x: None
-                    width: '64dp'
-                    text_size: self.size
+                    width: dp(80)
                     halign: 'right'
                     valign: 'middle'
-
-        # 2x2 Grid
+                    text_size: self.size
         GridLayout:
             cols: 2
-            padding: '12dp'
-            spacing: '12dp'
-
-            # GRADE
+            padding: dp(16)
+            spacing: dp(16)
             Button:
-                background_color: TRANSPARENT
+                background_color: 0, 0, 0, 0
                 on_release: root.nav_grade()
                 canvas.before:
                     Color:
@@ -96,31 +92,25 @@
                     Color:
                         rgba: 0.3, 0.35, 0.45, 1
                     Line:
-                        rounded_rectangle: self.x, self.y, self.width, self.height, 12
+                        rounded_rectangle: [self.x, self.y, self.width, self.height, 12]
+                
                 BoxLayout:
                     orientation: 'vertical'
-                    center: self.parent.center
+                    pos: self.parent.pos
                     size: self.parent.size
-                    spacing: '4dp'
-                    Widget:
+                    padding: dp(10)
                     Label:
                         text: 'GRADE'
-                        font_size: '24sp'
+                        font_size: '22sp'
                         bold: True
                         color: PRIMARY_COLOR
-                        size_hint_y: 0.5
                     Label:
-                        text: 'GRADE'
-                        font_size: '10sp'
-                        bold: True
+                        text: 'grade'
+                        font_size: '12sp'
                         color: WHITE
-                        letter_spacing: 2
-                        size_hint_y: 0.3
-                    Widget:
-
-            # SCAN
+                        opacity: 0.6
             Button:
-                background_color: TRANSPARENT
+                background_color: 0, 0, 0, 0
                 on_release: root.nav_scan()
                 canvas.before:
                     Color:
@@ -132,30 +122,25 @@
                     Color:
                         rgba: 0.3, 0.35, 0.45, 1
                     Line:
-                        rounded_rectangle: self.x, self.y, self.width, self.height, 12
+                        rounded_rectangle: [self.x, self.y, self.width, self.height, 12]
+                
                 BoxLayout:
                     orientation: 'vertical'
-                    center: self.parent.center
+                    pos: self.parent.pos
                     size: self.parent.size
-                    Widget:
+                    padding: dp(10)
                     Label:
                         text: 'SCAN'
-                        font_size: '24sp'
+                        font_size: '22sp'
                         bold: True
                         color: PRIMARY_COLOR
-                        size_hint_y: 0.5
                     Label:
-                        text: 'SCAN'
-                        font_size: '10sp'
-                        bold: True
+                        text: 'scan'
+                        font_size: '12sp'
                         color: WHITE
-                        letter_spacing: 2
-                        size_hint_y: 0.3
-                    Widget:
-
-            # CLASSES
+                        opacity: 0.6
             Button:
-                background_color: TRANSPARENT
+                background_color: 0, 0, 0, 0
                 on_release: root.nav_classes()
                 canvas.before:
                     Color:
@@ -167,30 +152,25 @@
                     Color:
                         rgba: 0.3, 0.35, 0.45, 1
                     Line:
-                        rounded_rectangle: self.x, self.y, self.width, self.height, 12
+                        rounded_rectangle: [self.x, self.y, self.width, self.height, 12]
+                
                 BoxLayout:
                     orientation: 'vertical'
-                    center: self.parent.center
+                    pos: self.parent.pos
                     size: self.parent.size
-                    Widget:
+                    padding: dp(10)
                     Label:
                         text: 'CLASSES'
-                        font_size: '24sp'
+                        font_size: '22sp'
                         bold: True
                         color: PRIMARY_COLOR
-                        size_hint_y: 0.5
                     Label:
-                        text: 'CLASSES'
-                        font_size: '10sp'
-                        bold: True
+                        text: 'classes'
+                        font_size: '12sp'
                         color: WHITE
-                        letter_spacing: 2
-                        size_hint_y: 0.3
-                    Widget:
-
-            # SETTINGS
+                        opacity: 0.6
             Button:
-                background_color: TRANSPARENT
+                background_color: 0, 0, 0, 0
                 on_release: root.nav_settings()
                 canvas.before:
                     Color:
@@ -202,27 +182,24 @@
                     Color:
                         rgba: 0.3, 0.35, 0.45, 1
                     Line:
-                        rounded_rectangle: self.x, self.y, self.width, self.height, 12
+                        rounded_rectangle: [self.x, self.y, self.width, self.height, 12]
+                
                 BoxLayout:
                     orientation: 'vertical'
-                    center: self.parent.center
+                    pos: self.parent.pos
                     size: self.parent.size
-                    Widget:
+                    padding: dp(10)
                     Label:
                         text: 'SETTINGS'
-                        font_size: '24sp'
+                        font_size: '22sp'
                         bold: True
                         color: PRIMARY_COLOR
-                        size_hint_y: 0.5
                     Label:
-                        text: 'SETTINGS'
-                        font_size: '10sp'
-                        bold: True
+                        text: 'settings'
+                        font_size: '12sp'
                         color: WHITE
-                        letter_spacing: 2
-                        size_hint_y: 0.3
-                    Widget:
-
-        # Bottom nav
+                        opacity: 0.6
         BottomNav:
             active_tab: 'home'
+            size_hint_y: None
+            height: dp(60)

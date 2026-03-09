@@ -1,17 +1,98 @@
-<DocumentItem@BoxLayout>:
+#:import dp kivy.metrics.dp
+
+<DocumentItem@ButtonBehavior+BoxLayout>:
     doc_name: ''
     doc_date: ''
     orientation: 'horizontal'
     size_hint_y: None
-    height: '60dp'
-    Label:
-        text: root.doc_name
-    Label:
-        text: root.doc_date
+    height: dp(50)  # Reduced from 60dp to fit more items
+    padding: [dp(15), dp(5)]
+    spacing: dp(10)
+    canvas.before:
+        Color:
+            rgba: (1, 1, 1, 0.05) if self.state == 'normal' else (0.075, 0.498, 0.925, 0.2)
+        Rectangle:
+            pos: self.pos
+            size: self.size
+        Color:
+            rgba: (1, 1, 1, 0.1)
+        Line:
+            points: [self.x, self.y, self.right, self.y]
 
-<DocumentsScreen>:
+    # File Icon placeholder
+    Label:
+        text: '??'
+        font_size: '18sp'
+        size_hint_x: None
+        width: dp(30)
+
     BoxLayout:
         orientation: 'vertical'
-        DocumentItem:
-            doc_name: 'Notes_Meeting.txt'
-            doc_date: '2026-03-09'
+        Label:
+            text: root.doc_name
+            font_size: '14sp'
+            bold: True
+            text_size: self.size
+            halign: 'left'
+            valign: 'bottom'
+        Label:
+            text: root.doc_date
+            font_size: '11sp'
+            color: (1, 1, 1, 0.5)
+            text_size: self.size
+            halign: 'left'
+            valign: 'top'
+
+    # Arrow indicating it can be clicked
+    Label:
+        text: '>'
+        font_size: '16sp'
+        size_hint_x: None
+        width: dp(20)
+        color: (0.075, 0.498, 0.925, 1)
+
+<DocumentsScreen>:
+    canvas.before:
+        Color:
+            rgba: BG_DARK
+        Rectangle:
+            pos: self.pos
+            size: self.size
+
+    BoxLayout:
+        orientation: 'vertical'
+
+        StatusBar:
+            size_hint_y: None
+            height: dp(40)
+            title: 'Select Document'
+            show_back: True
+
+        ScrollView:
+            size_hint_y: 1
+            do_scroll_x: False
+            BoxLayout:
+                id: doc_list
+                orientation: 'vertical'
+                size_hint_y: None
+                height: self.minimum_height
+                
+                # Test Items (These would usually be added via Python)
+                DocumentItem:
+                    doc_name: 'Lecture_Notes_01.pdf'
+                    doc_date: 'Mar 08, 2026'
+                DocumentItem:
+                    doc_name: 'Lab_Manual_v2.docx'
+                    doc_date: 'Mar 05, 2026'
+                DocumentItem:
+                    doc_name: 'Homework_3_Draft.txt'
+                    doc_date: 'Feb 28, 2026'
+                DocumentItem:
+                    doc_name: 'Project_Proposal.pdf'
+                    doc_date: 'Feb 15, 2026'
+
+        # Optional: A footer if you need one, otherwise this space is for the list
+        BottomNav:
+            active_tab: 'documents'
+            size_hint_y: None
+            height: dp(45)
