@@ -20,6 +20,8 @@ from wizprinter.screens.preview import PreviewScreen
 from wizprinter.screens.grade import GradeScreen
 from wizprinter.screens.scan import ScanScreen
 from wizprinter.screens.settings import SettingsScreen
+from wizprinter.widgets.statusbar import StatusBar
+from wizprinter.widgets.bottomnav import BottomNav
 
 
 class WizPrinterApp(App):
@@ -32,11 +34,16 @@ class WizPrinterApp(App):
         Window.size = (SCREEN_W, SCREEN_H)
         Window.clearcolor = BG_DARK
 
-        # Load all KV layout files
-        kv_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'kv')
+        # Get the absolute path to the project root
+        # If app.py is in wizprinter/, we go UP one level to find 'kv'
+        project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        kv_dir = os.path.join(project_root, 'kv')
+        
+        print(f"--- DEBUG: Looking for KV files in: {kv_dir} ---")
+
         kv_files = [
             'theme.kv',
-            'widgets.kv',
+            'widgets.kv',  # This contains <StatusBar>
             'landing.kv',
             'wifi.kv',
             'login.kv',
@@ -48,23 +55,35 @@ class WizPrinterApp(App):
             'scan.kv',
             'settings.kv',
         ]
+
         for kv_file in kv_files:
             path = os.path.join(kv_dir, kv_file)
             if os.path.exists(path):
+                print(f"Successfully loading: {kv_file}")
                 Builder.load_file(path)
+            else:
+                print(f"ERROR: File NOT FOUND: {path}")
+
+        print("--- DEBUG: KV Loading Complete ---")
 
         # Create screen manager
         sm = ScreenManager(transition=SlideTransition(duration=0.2))
-        sm.add_widget(LandingScreen(name='landing'))
-        sm.add_widget(WifiScreen(name='wifi'))
-        sm.add_widget(LoginScreen(name='login'))
-        sm.add_widget(DashboardScreen(name='dashboard'))
-        sm.add_widget(ClassesScreen(name='classes'))
-        sm.add_widget(DocumentsScreen(name='documents'))
-        sm.add_widget(PreviewScreen(name='preview'))
-        sm.add_widget(GradeScreen(name='grade'))
-        sm.add_widget(ScanScreen(name='scan'))
-        sm.add_widget(SettingsScreen(name='settings'))
+        
+        # We wrap these in try/except to catch exactly which screen fails
+        try:
+            sm.add_widget(LandingScreen(name='landing'))
+            sm.add_widget(WifiScreen(name='wifi'))
+            sm.add_widget(LoginScreen(name='login'))
+            sm.add_widget(DashboardScreen(name='dashboard'))
+            sm.add_widget(ClassesScreen(name='classes'))
+            sm.add_widget(DocumentsScreen(name='documents'))
+            sm.add_widget(PreviewScreen(name='preview'))
+            sm.add_widget(GradeScreen(name='grade'))
+            sm.add_widget(ScanScreen(name='scan'))
+            sm.add_widget(SettingsScreen(name='settings'))
+        except Exception as e:
+            print(f"CRASH during widget addition: {e}")
+            raise e
 
         return sm
 
