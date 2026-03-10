@@ -94,5 +94,5 @@ class WizPrinterApp(App):
 
     def go_back(self):
         """Navigate back (right slide transition)."""
-        self.root.transition = FadeTransition(dduration=0.15)
+        self.root.transition = FadeTransition(duration=0.15)
         self.root.current = self.root.previous()

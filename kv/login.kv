@@ -9,10 +9,13 @@
     BoxLayout:
         orientation: 'vertical'
 
-        # Status bar
+        # Status bar - Added 'show_back' and linked to landing
         StatusBar:
             title: 'User Login'
             hide_home: True
+            show_back: True
+            # Assuming your StatusBar widget can take an on_back action:
+            on_back: root.manager.current = 'landing' 
 
         # Form content
         BoxLayout:
@@ -46,7 +49,6 @@
                     hint_text_color: TEXT_MUTED
                     cursor_color: PRIMARY_COLOR
                     padding: ['12dp', '8dp']
-
             # Password field
             BoxLayout:
                 orientation: 'vertical'
@@ -80,11 +82,32 @@
                         width: '40dp'
                         background_color: BG_SURFACE
                         on_release: root.toggle_password()
-                        Label:
-                            text: 'O'
-                            font_size: '14sp'
-                            color: TEXT_MUTED
+                        
+                        # Use a Widget with canvas instructions instead of a Label
+                        Widget:
                             center: self.parent.center
+                            size: dp(24), dp(16)
+                            canvas:
+                                # Outer Eye Shape
+                                Color:
+                                    rgba: PRIMARY_COLOR if root.password_visible else TEXT_MUTED
+                                Ellipse:
+                                    pos: self.center_x - dp(12), self.center_y - dp(8)
+                                    size: dp(24), dp(16)
+                                
+                                # Pupil / Inner Circle
+                                Color:
+                                    rgba: BG_SURFACE # Matches background to create the "hole"
+                                Ellipse:
+                                    pos: self.center_x - dp(5), self.center_y - dp(5)
+                                    size: dp(10), dp(10)
+                                
+                                # Center Dot (Visible only when password is shown)
+                                Color:
+                                    rgba: (PRIMARY_COLOR if root.password_visible else [0,0,0,0])
+                                Ellipse:
+                                    pos: self.center_x - dp(2), self.center_y - dp(2)
+                                    size: dp(4), dp(4)
 
             # Login button
             Button:
@@ -106,7 +129,7 @@
                     color: WHITE
                     center: self.parent.center
 
-            Widget:
+            Widget: # Spacer
 
         # Bottom indicator
         AnchorLayout:

@@ -1,34 +1,41 @@
 <StatusBar>:
     title: ''
-    hide_home: False  # Default to showing it
+    hide_home: False  
+    show_back: False  # NEW: Property for the Login screen
     
     orientation: 'horizontal'
     size_hint_y: None
     height: dp(45)
     padding: [dp(5), 0]
 
+    # LEFT BUTTON SLOT (Back or Home)
     Button:
-        # If hide_home is True, the width and size collapse to 0
-        size_hint: (None, None) if not root.hide_home else (0, 0)
-        width: dp(50) if not root.hide_home else 0
-        height: dp(45) if not root.hide_home else 0
-        
-        opacity: 0 if root.hide_home else 1
-        disabled: True if root.hide_home else False
+        size_hint: (None, None) if (not root.hide_home or root.show_back) else (0, 0)
+        width: dp(50) if (not root.hide_home or root.show_back) else 0
+        height: dp(45)
         background_color: 0, 0, 0, 0
         
-        # This is the line that was bypassing your login
+        # LOGIC: If show_back is on, go to landing. Else go to dashboard.
         on_release: 
-            if not root.hide_home: app.root.current = 'dashboard'
+            if root.show_back: root.go_back()
+            elif not root.hide_home: app.root.current = 'dashboard'
         
         canvas.after:
             Color:
-                rgba: PRIMARY_COLOR if not root.hide_home else [0,0,0,0]
+                rgba: PRIMARY_COLOR if (not root.hide_home or root.show_back) else [0,0,0,0]
+            
+            # --- DRAW BACK ARROW (If show_back is True) ---
+            Line:
+                width: 1.5
+                points: 
+                    [self.center_x + dp(5), self.center_y - dp(8), self.center_x - dp(5), self.center_y, self.center_x + dp(5), self.center_y + dp(8)] if root.show_back else [0,0,0,0,0,0]
+            
+            # --- DRAW HOME ICON (Existing Logic) ---
             Triangle:
-                points: [self.x + dp(15), self.y + dp(22), self.right - dp(15), self.y + dp(22), self.center_x, self.y + dp(34)] if not root.hide_home else [0,0,0,0,0,0]
+                points: [self.x + dp(15), self.y + dp(22), self.right - dp(15), self.y + dp(22), self.center_x, self.y + dp(34)] if (not root.hide_home and not root.show_back) else [0,0,0,0,0,0]
             Rectangle:
-                pos: (self.center_x - dp(7), self.y + dp(12)) if not root.hide_home else (0,0)
-                size: (dp(14), dp(10)) if not root.hide_home else (0,0)
+                pos: (self.center_x - dp(7), self.y + dp(12)) if (not root.hide_home and not root.show_back) else (0,0)
+                size: (dp(14), dp(10)) if (not root.hide_home and not root.show_back) else (0,0)
 
     Label:
         text: root.title
@@ -37,4 +44,4 @@
         color: WHITE
         halign: 'left'
         valign: 'middle'
-        text_size: self.size 
+        text_size: self.size
