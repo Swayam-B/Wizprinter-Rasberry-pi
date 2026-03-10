@@ -81,60 +81,21 @@
                     valign: 'middle'
                     text_size: self.size
 
-        # 2x2 Grid Area - Now fills all remaining space
-        GridLayout:
-            cols: 2
+        # Main Dashboard Area
+        BoxLayout:
+            orientation: 'horizontal'
             padding: dp(16)
             spacing: dp(16)
             size_hint_y: 1
 
-            # GRADE
+            # --- LEFT COLUMN: THE LARGE VERTICAL GRADE BUTTON ---
             Button:
                 text: 'GRADE'
                 font_size: '22sp'
                 bold: True
                 color: PRIMARY_COLOR
                 background_color: 0, 0, 0, 0
-                on_release: root.nav_grade()
-                canvas.before:
-                    Color:
-                        rgba: BG_CARD
-                    RoundedRectangle:
-                        pos: self.pos
-                        size: self.size
-                        radius: [12]
-                    Color:
-                        rgba: 0.3, 0.35, 0.45, 1
-                    Line:
-                        rounded_rectangle: [self.x, self.y, self.width, self.height, 12]
-
-            # SCAN
-            Button:
-                text: 'SCAN'
-                font_size: '22sp'
-                bold: True
-                color: PRIMARY_COLOR
-                background_color: 0, 0, 0, 0
-                on_release: root.nav_scan()
-                canvas.before:
-                    Color:
-                        rgba: BG_CARD
-                    RoundedRectangle:
-                        pos: self.pos
-                        size: self.size
-                        radius: [12]
-                    Color:
-                        rgba: 0.3, 0.35, 0.45, 1
-                    Line:
-                        rounded_rectangle: [self.x, self.y, self.width, self.height, 12]
-
-            # CLASSES
-            Button:
-                text: 'CLASSES'
-                font_size: '22sp'
-                bold: True
-                color: PRIMARY_COLOR
-                background_color: 0, 0, 0, 0
+                size_hint_x: 0.5  # Takes up half the horizontal width
                 on_release: root.nav_classes()
                 canvas.before:
                     Color:
@@ -148,24 +109,48 @@
                     Line:
                         rounded_rectangle: [self.x, self.y, self.width, self.height, 12]
 
-            # SETTINGS
-            Button:
-                text: 'SETTINGS'
-                font_size: '22sp'
-                bold: True
-                color: PRIMARY_COLOR
-                background_color: 0, 0, 0, 0
-                on_release: root.nav_settings()
-                canvas.before:
-                    Color:
-                        rgba: BG_CARD
-                    RoundedRectangle:
-                        pos: self.pos
-                        size: self.size
-                        radius: [12]
-                    Color:
-                        rgba: 0.3, 0.35, 0.45, 1
-                    Line:
-                        rounded_rectangle: [self.x, self.y, self.width, self.height, 12]
+            # --- RIGHT COLUMN: SCAN AND SETTINGS STACKED ---
+            BoxLayout:
+                orientation: 'vertical'
+                spacing: dp(16)
+                size_hint_x: 0.5
 
-        # NOTE: BottomNav removed completely to expand the grid
+                # SCAN
+                Button:
+                    text: 'SCAN'
+                    font_size: '22sp'
+                    bold: True
+                    color: PRIMARY_COLOR
+                    background_color: 0, 0, 0, 0
+                    on_release: root.nav_scan()
+                    canvas.before:
+                        Color:
+                            rgba: BG_CARD
+                        RoundedRectangle:
+                            pos: self.pos
+                            size: self.size
+                            radius: [12]
+                        Color:
+                            rgba: 0.3, 0.35, 0.45, 1
+                        Line:
+                            rounded_rectangle: [self.x, self.y, self.width, self.height, 12]
+
+                # SETTINGS
+                Button:
+                    text: 'SETTINGS'
+                    font_size: '22sp'
+                    bold: True
+                    color: PRIMARY_COLOR
+                    background_color: 0, 0, 0, 0
+                    on_release: root.nav_settings()
+                    canvas.before:
+                        Color:
+                            rgba: BG_CARD
+                        RoundedRectangle:
+                            pos: self.pos
+                            size: self.size
+                            radius: [12]
+                        Color:
+                            rgba: 0.3, 0.35, 0.45, 1
+                        Line:
+                            rounded_rectangle: [self.x, self.y, self.width, self.height, 12]
