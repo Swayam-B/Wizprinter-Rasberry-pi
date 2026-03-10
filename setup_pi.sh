@@ -1,19 +1,27 @@
 #!/bin/bash
 # setup_pi.sh - Configures a fresh Pi for WizPrinter
 
-echo "Installing system dependencies..."
+echo "--- Phase 1: System Dependencies ---"
 sudo apt-get update
-sudo apt-get install -y libcups2-dev cups hplip # hplip adds common driver support
+# libcups2-dev is REQUIRED for pycups to compile
+sudo apt-get install -y libcups2-dev cups hplip libjpeg-dev zlib1g-dev libcamera-apps
 
-echo "Configuring user permissions..."
+echo "--- Phase 2: User Permissions ---"
+# Adds current user to the printer admin group
 sudo usermod -a -G lpadmin $USER
 
-echo "Enabling CUPS service..."
+echo "--- Phase 3: Services ---"
 sudo systemctl enable cups
 sudo systemctl start cups
 
-echo "Installing Python requirements..."
-source env/bin/activate
-pip install -r requirements.txt
+echo "--- Phase 4: Python Environment ---"
+# Check if env exists, if not create it
+if [ ! -d "env" ]; then
+    python3 -m venv env
+fi
 
-echo "Setup complete. Please reboot for group changes to take effect."
+# Use the absolute path to pip to ensure it hits the virtual environment
+./env/bin/pip install --upgrade pip
+./env/bin/pip install -r requirements.txt
+
+echo "Setup complete. YOU MUST REBOOT for group changes to take effect."

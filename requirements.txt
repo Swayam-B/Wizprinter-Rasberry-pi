@@ -4,8 +4,8 @@
 kivy>=2.3.0
 pillow>=10.0.0
 requests>=2.31.0
-pycups==2.0.1
 Pillow>=10.0.0
+git+https://github.com/OpenPrinting/pycups.git
 
 # Raspberry Pi specific (uncomment on Pi)
 # kivy[full]
