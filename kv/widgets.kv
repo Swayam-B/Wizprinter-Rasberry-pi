@@ -15,22 +15,25 @@
         height: dp(45)
         background_color: 0, 0, 0, 0
         
-        # LOGIC: If show_back is on, go to landing. Else go to dashboard.
         on_release: 
-            if root.show_back: root.go_back()
+            # Priority 1: Custom back action defined in the Screen (e.g., Settings)
+            if root.show_back and root.back: root.back()
+            # Priority 2: Default back logic
+            elif root.show_back: root.go_back()
+            # Priority 3: Home/Dashboard logic
             elif not root.hide_home: app.root.current = 'dashboard'
         
         canvas.after:
             Color:
                 rgba: PRIMARY_COLOR if (not root.hide_home or root.show_back) else [0,0,0,0]
             
-            # --- DRAW BACK ARROW (If show_back is True) ---
+            # Draw Back Arrow if show_back is True
             Line:
-                width: 1.5
+                width: dp(1.5)
                 points: 
                     [self.center_x + dp(5), self.center_y - dp(8), self.center_x - dp(5), self.center_y, self.center_x + dp(5), self.center_y + dp(8)] if root.show_back else [0,0,0,0,0,0]
             
-            # --- DRAW HOME ICON (Existing Logic) ---
+            # Draw Home Icon ONLY if show_back is False and hide_home is False
             Triangle:
                 points: [self.x + dp(15), self.y + dp(22), self.right - dp(15), self.y + dp(22), self.center_x, self.y + dp(34)] if (not root.hide_home and not root.show_back) else [0,0,0,0,0,0]
             Rectangle:
