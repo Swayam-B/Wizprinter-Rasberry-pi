@@ -1,28 +1,34 @@
 <StatusBar>:
     title: ''
+    hide_home: False  # Default to showing it
+    
     orientation: 'horizontal'
     size_hint_y: None
     height: dp(45)
     padding: [dp(5), 0]
 
     Button:
-        size_hint: None, None
-        size: dp(50), dp(45)
+        # If hide_home is True, the width and size collapse to 0
+        size_hint: (None, None) if not root.hide_home else (0, 0)
+        width: dp(50) if not root.hide_home else 0
+        height: dp(45) if not root.hide_home else 0
+        
+        opacity: 0 if root.hide_home else 1
+        disabled: True if root.hide_home else False
         background_color: 0, 0, 0, 0
+        
+        # This is the line that was bypassing your login
         on_release: 
-            app.root.transition.direction = 'right'
-            app.root.current = 'dashboard'
+            if not root.hide_home: app.root.current = 'dashboard'
         
         canvas.after:
             Color:
-                rgba: PRIMARY_COLOR
-            # THE ROOF: Lowered the peak to prevent clipping
+                rgba: PRIMARY_COLOR if not root.hide_home else [0,0,0,0]
             Triangle:
-                points: [self.x + dp(15), self.y + dp(22), self.right - dp(15), self.y + dp(22), self.center_x, self.y + dp(34)]
-            # THE BASE: Adjusted to sit flush with the roof
+                points: [self.x + dp(15), self.y + dp(22), self.right - dp(15), self.y + dp(22), self.center_x, self.y + dp(34)] if not root.hide_home else [0,0,0,0,0,0]
             Rectangle:
-                pos: self.center_x - dp(7), self.y + dp(12)
-                size: dp(14), dp(10)
+                pos: (self.center_x - dp(7), self.y + dp(12)) if not root.hide_home else (0,0)
+                size: (dp(14), dp(10)) if not root.hide_home else (0,0)
 
     Label:
         text: root.title
