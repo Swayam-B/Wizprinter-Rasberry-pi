@@ -60,35 +60,40 @@
                 text_size: self.size
                 halign: 'right'
                 valign: 'middle'
-        # Preview area - NOW SHOWING REAL IMAGES
+        # Preview area - NOW WITH VERTICAL SCROLLING
         FloatLayout:
-            # The PDF Page Container
+            # The White Paper Container
             BoxLayout:
+                id: paper_container
                 pos_hint: {'center_x': 0.5, 'center_y': 0.55}
-                size_hint: 0.85, 0.85
+                size_hint: 0.9, 0.85
                 canvas.before:
                     Color:
-                        rgba: 1, 1, 1, 1 # White paper background
+                        rgba: 1, 1, 1, 1
                     RoundedRectangle:
                         pos: self.pos
                         size: self.size
                         radius: [4]
-                    # Drop shadow effect
-                    Color:
-                        rgba: 0, 0, 0, 0.3
-                    Line:
-                        width: 1
-                        rectangle: [self.x, self.y, self.width, self.height]
-                
-                # --- ACTUAL PDF IMAGE ---
-                Image:
-                    id: preview_image
-                    source: root.current_page_source  # Path to the converted image file
-                    allow_stretch: True
-                    keep_ratio: True
-                    # This ensures the image fills the "paper" area cleanly
-                    size_hint: 0.95, 0.95
-                    pos_hint: {'center_x': 0.5, 'center_y': 0.5}
+
+                # --- SCROLLABLE CONTAINER (No internal padding) ---
+                ScrollView:
+                    id: scroll_container
+                    do_scroll_x: False # STOPS HORIZONTAL SCROLLING
+                    do_scroll_y: True
+                    bar_width: dp(4)
+
+                    Image:
+                        id: preview_image
+                        source: root.current_page_source
+                        size_hint: None, None
+                        # FORCE WIDTH: This makes the text much bigger
+                        width: scroll_container.width * 1.5 
+                        # CALCULATE HEIGHT: Keeps the PDF proportions
+                        height: self.width * (self.image_ratio if self.image_ratio > 0 else 1.41)
+                        # Position it to center the text horizontally
+                        pos_hint: {'center_x': 0.5}
+                        allow_stretch: True
+                        keep_ratio: True
 
             # Floating action buttons
             BoxLayout:
