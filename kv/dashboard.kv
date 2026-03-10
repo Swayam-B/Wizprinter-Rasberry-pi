@@ -1,5 +1,3 @@
-#:import dp kivy.metrics.dp
-
 <DashboardScreen>:
     canvas.before:
         Color:
@@ -31,13 +29,12 @@
             BoxLayout:
                 size_hint_x: 0.4
                 spacing: dp(8)
-                Label:
-                    text: '[P]'
-                    font_size: '18sp'
-                    bold: True
-                    color: PRIMARY_COLOR
+                
+                # Spacer to make room for the floating logo
+                Widget:
                     size_hint_x: None
-                    width: dp(30)
+                    width: dp(35)
+
                 Label:
                     text: 'WizPrinter'
                     font_size: '16sp'
@@ -47,7 +44,7 @@
                     valign: 'middle'
                     text_size: self.size
 
-            # Right: status
+            # Right: status (READY / TIME)
             BoxLayout:
                 size_hint_x: 0.6
                 spacing: dp(8)
@@ -88,14 +85,14 @@
             spacing: dp(16)
             size_hint_y: 1
 
-            # --- LEFT COLUMN: THE LARGE VERTICAL GRADE BUTTON ---
+            # LEFT COLUMN: GRADE
             Button:
                 text: 'GRADE'
                 font_size: '22sp'
                 bold: True
                 color: PRIMARY_COLOR
                 background_color: 0, 0, 0, 0
-                size_hint_x: 0.5  # Takes up half the horizontal width
+                size_hint_x: 0.5
                 on_release: root.nav_classes()
                 canvas.before:
                     Color:
@@ -109,13 +106,12 @@
                     Line:
                         rounded_rectangle: [self.x, self.y, self.width, self.height, 12]
 
-            # --- RIGHT COLUMN: SCAN AND SETTINGS STACKED ---
+            # RIGHT COLUMN: SCAN/SETTINGS
             BoxLayout:
                 orientation: 'vertical'
                 spacing: dp(16)
                 size_hint_x: 0.5
 
-                # SCAN
                 Button:
                     text: 'SCAN'
                     font_size: '22sp'
@@ -135,7 +131,6 @@
                         Line:
                             rounded_rectangle: [self.x, self.y, self.width, self.height, 12]
 
-                # SETTINGS
                 Button:
                     text: 'SETTINGS'
                     font_size: '22sp'
@@ -154,3 +149,14 @@
                             rgba: 0.3, 0.35, 0.45, 1
                         Line:
                             rounded_rectangle: [self.x, self.y, self.width, self.height, 12]
+
+    # --- FLOATING LOGO LAYER ---
+    Image:
+        source: 'assets/logo/whiteLogo.png'
+        size_hint: (None, None)
+        # Scaled larger to handle uncropped transparency
+        size: dp(70), dp(70)
+        # Positioned at absolute top left, nudged to center with the header bar
+        pos: (dp(0), root.height - self.height + dp(10))
+        allow_stretch: True
+        keep_ratio: True
