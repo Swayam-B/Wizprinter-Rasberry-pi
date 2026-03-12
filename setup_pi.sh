@@ -4,7 +4,7 @@
 echo "--- Phase 1: System Dependencies ---"
 sudo apt-get update
 # Added libmupdf-dev and swig for PDF rendering support
-sudo apt-get install -y libcups2-dev cups hplip libjpeg-dev zlib1g-dev \
+sudo apt-get install -y libcups2-dev cups sane sane-utils libsane-dev hplip libjpeg-dev zlib1g-dev \
      libcamera-apps libmupdf-dev swig
 
 echo "--- Phase 2: User Permissions ---"
