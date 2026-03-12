@@ -9,7 +9,7 @@
     BoxLayout:
         orientation: 'vertical'
 
-        # StatusBar
+        # --- Top Status Bar ---
         BoxLayout:
             size_hint_y: None
             height: '40dp'
@@ -30,7 +30,6 @@
                 width: '36dp'
                 background_color: TRANSPARENT
                 on_release: root.go_back()
-                # Replacing the Label with a Canvas arrow for Pi compatibility
                 Widget:
                     center: self.parent.center
                     size: dp(16), dp(16)
@@ -60,13 +59,15 @@
                 text_size: self.size
                 halign: 'right'
                 valign: 'middle'
-        # Preview area - NOW WITH VERTICAL SCROLLING
+        # --- Preview Content Area ---
         FloatLayout:
-            # The White Paper Container
-            BoxLayout:
-                id: paper_container
+            ScrollView:
+                id: scroll_container
+                size_hint: 0.9, 0.82
                 pos_hint: {'center_x': 0.5, 'center_y': 0.55}
-                size_hint: 0.9, 0.85
+                do_scroll_x: False
+                do_scroll_y: True
+                
                 canvas.before:
                     Color:
                         rgba: 1, 1, 1, 1
@@ -75,34 +76,22 @@
                         size: self.size
                         radius: [4]
 
-                # --- SCROLLABLE CONTAINER (No internal padding) ---
-                ScrollView:
-                    id: scroll_container
-                    do_scroll_x: False # STOPS HORIZONTAL SCROLLING
-                    do_scroll_y: True
-                    bar_width: dp(4)
+                # This grid allows us to stack the pages exactly like the scan thumbnails
+                GridLayout:
+                    id: preview_container
+                    cols: 1
+                    size_hint_y: None
+                    height: self.minimum_height
+                    spacing: dp(10)
+                    padding: dp(5)
 
-                    Image:
-                        id: preview_image
-                        source: root.current_page_source
-                        size_hint: None, None
-                        # FORCE WIDTH: This makes the text much bigger
-                        width: scroll_container.width * 1.5 
-                        # CALCULATE HEIGHT: Keeps the PDF proportions
-                        height: self.width * (self.image_ratio if self.image_ratio > 0 else 1.41)
-                        # Position it to center the text horizontally
-                        pos_hint: {'center_x': 0.5}
-                        allow_stretch: True
-                        keep_ratio: True
-
-            # Floating action buttons
+            # --- Floating Action Buttons ---
             BoxLayout:
                 pos_hint: {'center_x': 0.5, 'y': 0.02}
                 size_hint: 0.9, None
                 height: '72dp'
                 spacing: '12dp'
 
-                # DELETE
                 Button:
                     background_color: TRANSPARENT
                     on_release: root.delete_document()
@@ -118,7 +107,6 @@
                         bold: True
                         center: self.parent.center
 
-                # GRADE - Spans slightly larger
                 Button:
                     background_color: TRANSPARENT
                     on_release: root.grade_document()
@@ -134,7 +122,6 @@
                         bold: True
                         center: self.parent.center
 
-                # PRINT
                 Button:
                     background_color: TRANSPARENT
                     on_release: root.print_document()

@@ -8,4 +8,4 @@ class LandingScreen(Screen):
     """Initial landing screen with WizPrinter branding."""
 
     def on_tap_start(self):
-        App.get_running_app().navigate('wifi')
+        App.get_running_app().navigate('login')

@@ -1,87 +1,83 @@
-"""Document preview screen with Delete/Grade/Print actions."""
-
 import os
-import fitz  # PyMuPDF
+import time
+import fitz
+import subprocess
 from kivy.uix.screenmanager import Screen
 from kivy.app import App
-from kivy.properties import BooleanProperty, StringProperty
+from kivy.uix.image import Image as KivyImage
+from kivy.properties import BooleanProperty, StringProperty, ListProperty
 from kivy.clock import Clock
 
 class PreviewScreen(Screen):
-    """Document preview with floating action buttons."""
-
-    # These properties MUST be defined here to stop the KV AttributeErrors
-    show_success = BooleanProperty(False)
-    # Setting this to empty stops the logo from appearing by default
-    current_page_source = StringProperty('') 
-    page_info = StringProperty('PG 1 / 1')
-    success_message = StringProperty('Task Completed!')
+    page_info = StringProperty('DOC: 0 PGS')
 
     def load_document(self, doc_name):
-        """Converts PDF to image and updates the UI."""
-        pdf_path = os.path.join('assets', 'mocks', 'pdf', doc_name)
-        target_dir = os.path.join('assets', 'mocks', 'pdf')
-        temp_path = os.path.join(target_dir, 'temp_preview.png')
+        # We don't care about the PDF name anymore. 
+        # We just want to trigger the UI to look at the temp folder.
+        Clock.schedule_once(self._build_preview, 0.1)
 
-        if not os.path.exists(pdf_path):
-            print(f"File not found: {pdf_path}")
-            return
-
-        try:
-            doc = fitz.open(pdf_path)
-            self.page_info = f"PG 1 / {len(doc)}"
-            page = doc.load_page(0)
+    def _build_preview(self, dt):
+        container = self.ids.preview_container
+        container.clear_widgets()
+        
+        temp_dir = 'temp'
+        if os.path.exists(temp_dir):
+            # Get the JPGs exactly like you did on the Scan screen
+            files = sorted([os.path.join(temp_dir, f) for f in os.listdir(temp_dir) if f.endswith('.jpg')])
+            self.page_info = f"DOC: {len(files)} PGS"
             
-            # Reduce margin to 20 so we don't cut off question numbers
-            margin = 20 
-            full_rect = page.rect
-            crop_rect = fitz.Rect(
-                full_rect.x0 + margin, 
-                full_rect.y0 + margin, 
-                full_rect.x1 - margin, 
-                full_rect.y1 - margin
-            )
-            
-            # Render at 4x scale for crispness when zoomed
-            pix = page.get_pixmap(matrix=fitz.Matrix(4, 4), clip=crop_rect)
-            pix.save(temp_path)
-            doc.close()
-
-            self.current_page_source = temp_path
-            # Reset scroll to top
-            if 'scroll_container' in self.ids:
-                self.ids.scroll_container.scroll_y = 1.0
-                # Reset horizontal scroll to center
-                self.ids.scroll_container.scroll_x = 0.5
-
-            # Update KV properties
-            self.current_page_source = temp_path
-            
-            # Reset scroll to top
-            if 'scroll_container' in self.ids:
-                self.ids.scroll_container.scroll_y = 1.0
-            
-            # Force Kivy to reload the image from disk
-            if 'preview_image' in self.ids:
-                self.ids.preview_image.reload()
-
-        except Exception as e:
-            print(f"Error rendering PDF: {e}")
+            for path in files:
+                # We add them as separate widgets so the GPU never has to load one giant image
+                img = KivyImage(
+                    source=path,
+                    size_hint_y=None,
+                    height=container.width * 1.41, 
+                    allow_stretch=True,
+                    keep_ratio=True
+                )
+                img.reload()
+                container.add_widget(img)
 
     def go_back(self):
-        """Return to the document selection list."""
-        App.get_running_app().navigate('documents', direction='right')
+        App.get_running_app().navigate('dashboard', direction='right')
 
     def delete_document(self):
-        App.get_running_app().navigate('documents', direction='right')
+        # Optional: Add logic to wipe 'temp/' here
+        App.get_running_app().navigate('dashboard', direction='right')
 
     def grade_document(self):
-        self._show_completion('Grading Complete!')
+        self.success_message = "GRADING IN PROGRESS..."
+        self.show_success = True
+        
+        Clock.schedule_once(self._execute_print_after_delay, 10.0)
+    def _execute_print_after_delay(self, dt):
+        """This runs after the 10-second timer."""
+        # Change message to printing
+        self.success_message = "GRADING COMPLETE! PRINTING..."
+        
+        # Define the target PDF path
+        print_pdf_path = os.path.join(os.getcwd(), "assets", "mocks", "pdf", "graded_oct_24_multiple_page_answered.pdf")
+        
+        # Execute the Linux print command (lp)
+        try:
+            if os.path.exists(print_pdf_path):
+                # 'lp' sends the file to the default system printer
+                subprocess.run(['lp', print_pdf_path], check=True)
+                print(f"SENT TO PRINTER: {print_pdf_path}")
+            else:
+                self.success_message = "ERROR: PDF NOT FOUND"
+                print(f"FILE MISSING: {print_pdf_path}")
+        except Exception as e:
+            self.success_message = "PRINT ERROR"
+            print(f"PRINTING FAILED: {e}")
+
+        # 3. Hide the success message and return to dashboard after a short reveal
+        Clock.schedule_once(self._finish, 3.0)
 
     def print_document(self):
         self._show_completion('Print Sent!')
 
-    def _show_completion(self, message='Task Completed!'):
+    def _show_completion(self, message):
         self.success_message = message
         self.show_success = True
         Clock.schedule_once(self._finish, 2.0)
