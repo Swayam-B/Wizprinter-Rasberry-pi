@@ -18,7 +18,10 @@ class SettingsScreen(Screen):
 
     def logout(self):
         """Log out and return to landing screen."""
-        App.get_running_app().navigate('landing', direction='right')
+        import wizprinter.api_client as api
+
+        api.clear_session()
+        App.get_running_app().navigate("landing", direction="right")
 
     def go_back(self):
         App.get_running_app().navigate('dashboard', direction='right')

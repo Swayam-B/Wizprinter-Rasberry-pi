@@ -109,6 +109,15 @@
                                     pos: self.center_x - dp(2), self.center_y - dp(2)
                                     size: dp(4), dp(4)
 
+            Label:
+                text: root.status_text
+                font_size: '12sp'
+                color: 1, 0.3, 0.3, 1
+                size_hint_y: None
+                height: '20dp'
+                text_size: self.size
+                halign: 'center'
+
             # Login button
             Button:
                 size_hint_y: None

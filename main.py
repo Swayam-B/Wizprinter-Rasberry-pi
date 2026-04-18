@@ -7,6 +7,10 @@ Raspberry Pi 3.5" Touchscreen (480x320) Self-Service Printing Kiosk
 import os
 import sys
 
+from dotenv import load_dotenv
+
+load_dotenv()
+
 # Set Kivy configuration BEFORE importing kivy
 os.environ['KIVY_WINDOW'] = 'sdl2'
 

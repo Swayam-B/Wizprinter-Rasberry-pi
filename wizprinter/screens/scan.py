@@ -1,4 +1,5 @@
 import os
+import shutil
 import subprocess
 from PIL import Image as PILImage
 from kivy.uix.screenmanager import Screen
@@ -6,6 +7,8 @@ from kivy.app import App
 from kivy.uix.image import Image as KivyImage
 from kivy.properties import StringProperty, BooleanProperty, ListProperty
 from kivy.clock import Clock
+
+from wizprinter.utils.image_file import is_valid_jpeg
 
 class ScanScreen(Screen):
     """Handles multi-page hardware scanning and thumbnail previews."""
@@ -18,10 +21,30 @@ class ScanScreen(Screen):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.temp_dir = 'temp'
+        self.temp_dir = "temp"
         os.makedirs(self.temp_dir, exist_ok=True)
         # Auto-find the scanner so e0/e1/e2 doesn't matter
         self.device_path = self._discover_scanner()
+
+    def on_pre_enter(self, *args):
+        """Drop corrupt/empty leftovers so Kivy never tries to load them."""
+        if not os.path.isdir(self.temp_dir):
+            return
+        for name in os.listdir(self.temp_dir):
+            if not name.lower().endswith((".jpg", ".jpeg")):
+                continue
+            path = os.path.join(self.temp_dir, name)
+            if not is_valid_jpeg(path):
+                try:
+                    os.remove(path)
+                except OSError:
+                    pass
+        # Reconcile list with disk
+        self.scanned_images = [
+            os.path.abspath(p)
+            for p in self.scanned_images
+            if is_valid_jpeg(p)
+        ]
 
     def _discover_scanner(self):
         """Automatically finds the active AirScan path for the OfficeJet."""
@@ -56,9 +79,11 @@ class ScanScreen(Screen):
         grid.clear_widgets()
         
         for img_path in value:
-            # Create a thumbnail widget for each scanned page
+            if not is_valid_jpeg(img_path):
+                continue
+            abs_path = os.path.abspath(img_path)
             img_widget = KivyImage(
-                source=img_path,
+                source=abs_path,
                 size_hint_y=None,
                 # Maintain A4/Letter aspect ratio for the thumbnail
                 height=grid.width * 1.41,
@@ -81,41 +106,64 @@ class ScanScreen(Screen):
         if self.is_scanning:
             return
 
+        if not shutil.which("scanimage"):
+            self.status_msg = "NO SCANNER (install scanimage / SANE)"
+            return
+
         self.is_scanning = True
         self.status_msg = "SCANNING..."
-        # Delay allows the UI to show the 'Scanning' status before hardware block
         Clock.schedule_once(self._perform_hardware_scan, 0.2)
+
     def _perform_hardware_scan(self, dt):
-        # --- FIXED INDENTATION BLOCK ---
         page_num = len(self.scanned_images) + 1
         filename = os.path.join(self.temp_dir, f"page_{page_num}.jpg")
 
-        # Command optimized for speed (150 DPI) and hardware compatibility
         cmd = [
             "scanimage",
-            "-d", self.device_path,
+            "-d",
+            self.device_path,
             "--format=jpeg",
-            "--mode", "Gray",
-            "--resolution", "150" 
+            "--mode",
+            "Gray",
+            "--resolution",
+            "150",
         ]
-        
+
         try:
-            with open(filename, 'wb') as f:
-                result = subprocess.run(cmd, stdout=f, stderr=subprocess.PIPE, text=True)
-            
-            if result.returncode == 0:
-                # Appending to the ListProperty triggers the 'on_scanned_images' UI update
-                self.scanned_images.append(filename)
-                self.page_info = f"Page {len(self.scanned_images)}"
-                self.status_msg = "READY"
-            else:
+            result = subprocess.run(
+                cmd,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+            )
+            if result.returncode != 0 or not result.stdout:
                 self.status_msg = "SCAN ERROR"
-                print(f"SANE Error: {result.stderr}")
-                
+                print(f"SANE Error: {result.stderr!r}")
+                return
+
+            with open(filename, "wb") as f:
+                f.write(result.stdout)
+
+            if not is_valid_jpeg(filename):
+                try:
+                    os.remove(filename)
+                except OSError:
+                    pass
+                self.status_msg = "SCAN ERROR (bad image)"
+                return
+
+            self.scanned_images.append(os.path.abspath(filename))
+            self.page_info = f"Page {len(self.scanned_images)}"
+            self.status_msg = "READY"
+
         except Exception as e:
             self.status_msg = "SYSTEM ERROR"
             print(f"Subprocess Exception: {e}")
-        
+            if os.path.exists(filename):
+                try:
+                    os.remove(filename)
+                except OSError:
+                    pass
+
         finally:
             self.is_scanning = False
 
@@ -129,41 +177,34 @@ class ScanScreen(Screen):
             self.status_msg = "PAGE DELETED"
 
     def upload(self):
-        """Compiles JPG batch into high-res PDF and switches to Preview."""
+        """Compiles JPG batch into PDF and switches to Preview."""
         if not self.scanned_images:
             self.status_msg = "NO PAGES"
             return
 
         self.status_msg = "COMPILING..."
-        output_name = 'latest_scan.pdf'
-        pdf_path = os.path.join('assets', 'mocks', 'pdf', output_name)
-        
-        try:
-            # Use Pillow to wrap the JPGs into a multi-page PDF
-            images = [PILImage.open(f).convert('RGB') for f in self.scanned_images]
-            if images:
-                images[0].save(
-                    pdf_path, 
-                    save_all=True, 
-                    append_images=images[1:]
-                )
+        output_name = "latest_scan.pdf"
+        scan_pdf_dir = os.path.abspath(os.path.join("temp", "scan_pdf"))
+        os.makedirs(scan_pdf_dir, exist_ok=True)
+        pdf_path = os.path.join(scan_pdf_dir, output_name)
 
-                # Cleanup temp files
-#                for img in self.scanned_images:
-#                    if os.path.exists(img):
-#                        os.remove(img)
+        try:
+            paths = [p for p in self.scanned_images if is_valid_jpeg(p)]
+            if not paths:
+                self.status_msg = "NO VALID PAGES"
+                return
+            images = [PILImage.open(f).convert("RGB") for f in paths]
+            if images:
+                images[0].save(pdf_path, save_all=True, append_images=images[1:])
                 self.scanned_images = []
-                
-                # Hand off to PreviewScreen
+
                 app = App.get_running_app()
-                preview_screen = app.root.get_screen('preview')
-        
-                # Load the images into preview BEFORE navigating
-                preview_screen.load_document('latest_scan.pdf')
-        
-                # Navigate using your app's helper
-                app.navigate('preview')
-                
+                preview_screen = app.root.get_screen("preview")
+
+                preview_screen.scanned_pdf_path = pdf_path
+                preview_screen.show_scan_jpeg_previews()
+                app.navigate("preview")
+
         except Exception as e:
             self.status_msg = "PDF ERROR"
             print(f"PDF Error: {e}")

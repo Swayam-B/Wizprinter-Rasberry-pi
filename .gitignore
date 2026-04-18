@@ -52,6 +52,4 @@ build/
 __pycache__/
 *.pyc
 temp/
-assets/mocks/pdf/latest_scan.pdf
-assets/mocks/pdf/temp_preview.png
 test.jpg

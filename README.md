@@ -4,7 +4,7 @@ Self-service printing kiosk application built with **Python + Kivy** for a Raspb
 
 ## Features
 
-- **Grade** – Scan and AI-grade student documents
+- **Grade** – Pick class and exam, scan answer sheets, then grade from preview (API-backed)
 - **Scan** – Scan documents and upload to your web backend
 - **Classes** – Select semester, subject, and class for document routing
 - **Print** – Preview and print documents from USB or cloud
@@ -25,9 +25,8 @@ Self-service printing kiosk application built with **Python + Kivy** for a Raspb
 │   │   ├── dashboard.py     # 2×2 action grid
 │   │   ├── classes.py       # Semester/Subject/Class pickers
 │   │   ├── documents.py     # Document file list
-│   │   ├── preview.py       # Doc preview + Delete/Grade/Print
-│   │   ├── grade.py         # Grade document split view
-│   │   ├── scan.py          # Scan & upload split view
+│   │   ├── preview.py       # Doc preview + grade (API) + print
+│   │   ├── scan.py          # Scan & build PDF for preview/grading
 │   │   └── settings.py      # System settings + logout
 │   └── widgets/             # Reusable components
 │       ├── statusbar.py     # Top status bar
@@ -42,7 +41,6 @@ Self-service printing kiosk application built with **Python + Kivy** for a Raspb
 │   ├── classes.kv
 │   ├── documents.kv
 │   ├── preview.kv
-│   ├── grade.kv
 │   ├── scan.kv
 │   └── settings.kv
 ├── design/                  # HTML mockups from Stitch
@@ -83,22 +81,21 @@ python3 main.py
 
 ```
 Landing → WiFi → Login → Dashboard
-                            ├── Grade → Preview → (Success) → Dashboard
-                            ├── Scan  → Upload  → Dashboard
-                            ├── Classes → Documents → Preview
+                            ├── Grade (tile) → Classes → Documents → Preview → grade/print
+                            ├── Scan → Preview → (optional grade from preview)
                             └── Settings → (Logout) → Landing
 ```
 
 ## Connecting to Your Web Backend
 
-The screens include TODO placeholders for API integration. Key integration points:
+Key integration points:
 
 | Screen | Method | Purpose |
 |--------|--------|---------|
-| `login.py` | `attempt_login()` | Authenticate against your web API |
-| `grade.py` | `grade_now()` | Submit document for AI grading |
-| `scan.py` | `upload()` | Upload scanned document |
-| `documents.py` | `on_enter()` | Fetch document list from API |
+| `login.py` | Firebase + onboard | Authenticate and establish API session |
+| `preview.py` | `grade_document()` | POST exam grade, poll, download graded PDF, print |
+| `scan.py` | `upload()` | Build scan PDF and open preview |
+| `documents.py` | `on_enter()` | Load exams from API |
 
 ## Hardware
 

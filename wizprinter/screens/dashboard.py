@@ -8,7 +8,7 @@ from datetime import datetime
 
 
 class DashboardScreen(Screen):
-    """Home dashboard with Grade, Scan, Classes, Settings buttons."""
+    """Home dashboard with Grade (→ classes), Scan, and Settings."""
 
     current_time = StringProperty('12:45 PM')
 
@@ -22,9 +22,6 @@ class DashboardScreen(Screen):
 
     def _update_time(self):
         self.current_time = datetime.now().strftime('%I:%M %p')
-
-    def nav_grade(self):
-        App.get_running_app().navigate('grade')
 
     def nav_scan(self):
         App.get_running_app().navigate('scan')

@@ -136,3 +136,35 @@
                         font_size: '8sp'
                         bold: True
                         center: self.parent.center
+
+    FloatLayout:
+        size_hint: 1, 1
+        opacity: 1 if root.show_success else 0
+
+        canvas.before:
+            Color:
+                rgba: (0, 0, 0, 0.85) if root.show_success else (0, 0, 0, 0)
+            Rectangle:
+                pos: self.pos
+                size: self.size
+
+        AnchorLayout:
+            anchor_x: 'center'
+            anchor_y: 'center'
+            BoxLayout:
+                orientation: 'vertical'
+                size_hint: 0.85, None
+                height: dp(90)
+                spacing: dp(8)
+                Label:
+                    text: root.success_message
+                    font_size: '14sp'
+                    bold: True
+                    color: (0.3, 0.9, 0.4, 1)
+                    halign: 'center'
+                    text_size: self.size
+                Label:
+                    text: 'Please wait...'
+                    font_size: '11sp'
+                    color: (1, 1, 1, 0.6)
+                    halign: 'center'

@@ -1,3 +1,5 @@
+#:import max builtins.max
+
 <ScanScreen>:
     canvas.before:
         Color:
@@ -63,32 +65,27 @@
                         spacing: dp(10)
                         padding: dp(10)
                         size_hint_y: None
-                        height: self.minimum_height # Required for scrolling
-
-                        # This effectively 'loops' through the scanned_images list
-                        # We use a helper to clear and re-add in Python or 
-                        # use a dynamic approach here:
-                        BoxLayout:
-                            orientation: 'vertical'
-                            size_hint_y: None
-                            height: self.minimum_height
-                            
-                            # Kivy doesn't have a native 'for each' in KV, 
-                            # so we'll use a Factory or simple dynamic generation
-                            # For now, let's simplify the KV to show the LATEST page
-                            # and I'll show you the Python 'loop' fix below.
-                            Image:
-                                source: root.scanned_images[-1] if root.scanned_images else ''
-                                size_hint_y: None
-                                height: self.width * 1.41
-                                allow_stretch: True
-                                keep_ratio: True
+                        height: max(dp(80), self.minimum_height)
 
             # Right side: Control Buttons
             BoxLayout:
                 size_hint_x: 0.35
                 orientation: 'vertical'
                 spacing: dp(10)
+
+                Button:
+                    text: 'BACK'
+                    font_size: '11sp'
+                    size_hint_y: 0.8
+                    background_color: (0, 0, 0, 0)
+                    on_release: root.go_back()
+                    canvas.before:
+                        Color:
+                            rgba: (0.2, 0.1, 0.1, 1)
+                        RoundedRectangle:
+                            pos: self.pos
+                            size: self.size
+                            radius: [6]
 
                 # ADD PAGE
                 Button:

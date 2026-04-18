@@ -17,7 +17,6 @@ from wizprinter.screens.dashboard import DashboardScreen
 from wizprinter.screens.classes import ClassesScreen
 from wizprinter.screens.documents import DocumentsScreen
 from wizprinter.screens.preview import PreviewScreen
-from wizprinter.screens.grade import GradeScreen
 from wizprinter.screens.scan import ScanScreen
 from wizprinter.screens.settings import SettingsScreen
 from wizprinter.widgets.statusbar import StatusBar
@@ -51,7 +50,6 @@ class WizPrinterApp(App):
             'classes.kv',
             'documents.kv',
             'preview.kv',
-            'grade.kv',
             'scan.kv',
             'settings.kv',
         ]
@@ -78,7 +76,6 @@ class WizPrinterApp(App):
             sm.add_widget(ClassesScreen(name='classes'))
             sm.add_widget(DocumentsScreen(name='documents'))
             sm.add_widget(PreviewScreen(name='preview'))
-            sm.add_widget(GradeScreen(name='grade'))
             sm.add_widget(ScanScreen(name='scan'))
             sm.add_widget(SettingsScreen(name='settings'))
         except Exception as e:
