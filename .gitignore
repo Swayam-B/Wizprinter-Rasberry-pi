@@ -40,6 +40,15 @@
 # debug information files
 *.dwo
 
+# Python / virtual environments
+.venv/
+venv/
+.env
+*.egg-info/
+dist/
+build/
+.idea/
+
 __pycache__/
 *.pyc
 temp/
