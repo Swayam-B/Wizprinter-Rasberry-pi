@@ -127,7 +127,7 @@ def firebase_sign_in(email: str, password: str) -> dict:
         "post",
         url,
         json={"email": email, "password": password, "returnSecureToken": True},
-        timeout=15,
+        timeout=200,
     )
     return resp.json()
 
@@ -138,7 +138,7 @@ def onboard_professor() -> dict:
         "post",
         f"{BASE_URL}/api/professors/onboard",
         headers=_headers(),
-        timeout=10,
+        timeout=200,
     ).json()
 
 
