@@ -1,3 +1,6 @@
+# login.kv — 800x480 layout
+# Form centred in a constrained card; extra horizontal space used for margins.
+
 <LoginScreen>:
     canvas.before:
         Color:
@@ -9,144 +12,160 @@
     BoxLayout:
         orientation: 'vertical'
 
-        # Status bar - Added 'show_back' and linked to landing
         StatusBar:
             title: 'User Login'
             hide_home: True
             show_back: True
-            # Assuming your StatusBar widget can take an on_back action:
-            on_back: root.manager.current = 'landing' 
+            on_back: root.manager.current = 'landing'
 
-        # Form content
-        BoxLayout:
-            orientation: 'vertical'
-            padding: ['16dp', '8dp']
-            spacing: '8dp'
+        # Card container — max width keeps the form readable on wide display
+        AnchorLayout:
+            anchor_x: 'center'
+            anchor_y: 'center'
 
-            # Username field
             BoxLayout:
                 orientation: 'vertical'
-                size_hint_y: None
-                height: '56dp'
-                spacing: '4dp'
+                size_hint: (None, None)
+                size: dp(400), dp(340)
+                spacing: dp(12)
+                padding: [dp(32), dp(24)]
+                canvas.before:
+                    Color:
+                        rgba: BG_CARD
+                    RoundedRectangle:
+                        pos: self.pos
+                        size: self.size
+                        radius: [16]
+                    Color:
+                        rgba: BORDER_COLOR
+                    Line:
+                        rounded_rectangle: [self.x, self.y, self.width, self.height, 16]
+
                 Label:
-                    text: 'Username'
-                    font_size: '12sp'
+                    text: 'Sign In'
+                    font_size: '22sp'
+                    bold: True
                     color: WHITE
                     size_hint_y: None
-                    height: '16dp'
-                    text_size: self.size
+                    height: dp(36)
                     halign: 'left'
-                TextInput:
-                    id: username_input
-                    hint_text: 'Enter Username'
-                    font_size: '14sp'
-                    size_hint_y: None
-                    height: '36dp'
-                    multiline: False
-                    background_color: BG_SURFACE
-                    foreground_color: WHITE
-                    hint_text_color: TEXT_MUTED
-                    cursor_color: PRIMARY_COLOR
-                    padding: ['12dp', '8dp']
-            # Password field
-            BoxLayout:
-                orientation: 'vertical'
-                size_hint_y: None
-                height: '56dp'
-                spacing: '4dp'
-                Label:
-                    text: 'Password'
-                    font_size: '12sp'
-                    color: WHITE
-                    size_hint_y: None
-                    height: '16dp'
                     text_size: self.size
-                    halign: 'left'
+
+                # Username
                 BoxLayout:
+                    orientation: 'vertical'
                     size_hint_y: None
-                    height: '36dp'
+                    height: dp(62)
+                    spacing: dp(4)
+                    Label:
+                        text: 'Username'
+                        font_size: '12sp'
+                        color: TEXT_MUTED
+                        size_hint_y: None
+                        height: dp(18)
+                        text_size: self.size
+                        halign: 'left'
                     TextInput:
-                        id: password_input
-                        hint_text: 'Password'
-                        font_size: '14sp'
+                        id: username_input
+                        hint_text: 'Enter username'
+                        font_size: '15sp'
+                        size_hint_y: None
+                        height: dp(40)
                         multiline: False
-                        password: not root.password_visible
                         background_color: BG_SURFACE
                         foreground_color: WHITE
                         hint_text_color: TEXT_MUTED
                         cursor_color: PRIMARY_COLOR
-                        padding: ['12dp', '8dp']
-                    Button:
-                        size_hint_x: None
-                        width: '40dp'
-                        background_color: BG_SURFACE
-                        on_release: root.toggle_password()
-                        
-                        # Use a Widget with canvas instructions instead of a Label
-                        Widget:
-                            center: self.parent.center
-                            size: dp(24), dp(16)
-                            canvas:
-                                # Outer Eye Shape
-                                Color:
-                                    rgba: PRIMARY_COLOR if root.password_visible else TEXT_MUTED
-                                Ellipse:
-                                    pos: self.center_x - dp(12), self.center_y - dp(8)
-                                    size: dp(24), dp(16)
-                                
-                                # Pupil / Inner Circle
-                                Color:
-                                    rgba: BG_SURFACE # Matches background to create the "hole"
-                                Ellipse:
-                                    pos: self.center_x - dp(5), self.center_y - dp(5)
-                                    size: dp(10), dp(10)
-                                
-                                # Center Dot (Visible only when password is shown)
-                                Color:
-                                    rgba: (PRIMARY_COLOR if root.password_visible else [0,0,0,0])
-                                Ellipse:
-                                    pos: self.center_x - dp(2), self.center_y - dp(2)
-                                    size: dp(4), dp(4)
+                        padding: [dp(14), dp(10)]
 
-            Label:
-                text: root.status_text
-                font_size: '12sp'
-                color: 1, 0.3, 0.3, 1
-                size_hint_y: None
-                height: '20dp'
-                text_size: self.size
-                halign: 'center'
+                # Password
+                BoxLayout:
+                    orientation: 'vertical'
+                    size_hint_y: None
+                    height: dp(62)
+                    spacing: dp(4)
+                    Label:
+                        text: 'Password'
+                        font_size: '12sp'
+                        color: TEXT_MUTED
+                        size_hint_y: None
+                        height: dp(18)
+                        text_size: self.size
+                        halign: 'left'
+                    BoxLayout:
+                        size_hint_y: None
+                        height: dp(40)
+                        TextInput:
+                            id: password_input
+                            hint_text: 'Password'
+                            font_size: '15sp'
+                            multiline: False
+                            password: not root.password_visible
+                            background_color: BG_SURFACE
+                            foreground_color: WHITE
+                            hint_text_color: TEXT_MUTED
+                            cursor_color: PRIMARY_COLOR
+                            padding: [dp(14), dp(10)]
+                        Button:
+                            size_hint_x: None
+                            width: dp(44)
+                            background_color: BG_SURFACE
+                            on_release: root.toggle_password()
+                            Widget:
+                                center: self.parent.center
+                                size: dp(24), dp(16)
+                                canvas:
+                                    Color:
+                                        rgba: PRIMARY_COLOR if root.password_visible else TEXT_MUTED
+                                    Ellipse:
+                                        pos: self.center_x - dp(12), self.center_y - dp(8)
+                                        size: dp(24), dp(16)
+                                    Color:
+                                        rgba: BG_SURFACE
+                                    Ellipse:
+                                        pos: self.center_x - dp(5), self.center_y - dp(5)
+                                        size: dp(10), dp(10)
+                                    Color:
+                                        rgba: (PRIMARY_COLOR if root.password_visible else [0,0,0,0])
+                                    Ellipse:
+                                        pos: self.center_x - dp(2), self.center_y - dp(2)
+                                        size: dp(4), dp(4)
 
-            # Login button
-            Button:
-                size_hint_y: None
-                height: '44dp'
-                background_color: TRANSPARENT
-                on_release: root.attempt_login(username_input.text, password_input.text)
-                canvas.before:
-                    Color:
-                        rgba: PRIMARY_COLOR
-                    RoundedRectangle:
-                        pos: self.pos
-                        size: self.size
-                        radius: [8]
                 Label:
-                    text: 'Login'
-                    font_size: '16sp'
-                    bold: True
-                    color: WHITE
-                    center: self.parent.center
+                    text: root.status_text
+                    font_size: '12sp'
+                    color: 1, 0.3, 0.3, 1
+                    size_hint_y: None
+                    height: dp(20)
+                    text_size: self.size
+                    halign: 'center'
 
-            Widget: # Spacer
+                Button:
+                    size_hint_y: None
+                    height: dp(48)
+                    background_color: TRANSPARENT
+                    on_release: root.attempt_login(username_input.text, password_input.text)
+                    canvas.before:
+                        Color:
+                            rgba: PRIMARY_COLOR
+                        RoundedRectangle:
+                            pos: self.pos
+                            size: self.size
+                            radius: [10]
+                    Label:
+                        text: 'Login'
+                        font_size: '17sp'
+                        bold: True
+                        color: WHITE
+                        center: self.parent.center
 
-        # Bottom indicator
+        # Bottom home indicator
         AnchorLayout:
             size_hint_y: None
-            height: '16dp'
+            height: dp(20)
             Widget:
                 size_hint: None, None
-                size: '80dp', '4dp'
+                size: dp(80), dp(4)
                 canvas:
                     Color:
                         rgba: 0.3, 0.3, 0.3, 0.5
