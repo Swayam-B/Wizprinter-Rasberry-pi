@@ -174,6 +174,10 @@ class ScanScreen(Screen):
         output_name = "latest_scan.pdf"
         scan_pdf_dir = os.path.abspath(os.path.join("temp", "scan_pdf"))
         os.makedirs(scan_pdf_dir, exist_ok=True)
+        for old_file in os.listdir(scan_pdf_dir):
+            try:
+                os.remove(os.path.join(scan_pdf_dir, old_file))
+            except: pass
         pdf_path = os.path.join(scan_pdf_dir, output_name)
 
         try:
