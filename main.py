@@ -25,6 +25,7 @@ Config.set('graphics', 'fullscreen', '1')
 Config.set('kivy', 'keyboard_mode', 'systemanddock')
 Config.set('input', 'mouse', 'mouse,multitouch_on_demand')
 
+from kivy.core.window import Window
 from wizprinter.app import WizPrinterApp
 
 if __name__ == '__main__':
