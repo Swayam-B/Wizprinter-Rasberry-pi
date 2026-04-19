@@ -28,4 +28,8 @@ Config.set('input', 'mouse', 'mouse,multitouch_on_demand')
 from wizprinter.app import WizPrinterApp
 
 if __name__ == '__main__':
+    # 2. MANUAL OVERRIDE (This kills the "Bottom-Left" bug)
+    Window.size = (800, 480)
+    Window.top = 0
+    Window.left = 0
     WizPrinterApp().run()
