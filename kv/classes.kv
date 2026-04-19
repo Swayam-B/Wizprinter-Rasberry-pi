@@ -11,123 +11,139 @@
 
         StatusBar:
             size_hint_y: None
-            height: dp(45)
+            height: dp(52)
             title: 'Class Selection'
             show_back: False
             hide_home: False
 
-        ScrollView:
-            size_hint_y: 1
-            do_scroll_x: False
-            
+        # ── Main content ────────────────────────────────────
+        AnchorLayout:
+            anchor_x: 'center'
+            anchor_y: 'center'
+
             BoxLayout:
                 orientation: 'vertical'
-                padding: [dp(16), dp(12)]
-                spacing: dp(16)
-                size_hint_y: None
-                height: self.minimum_height
-
-                BoxLayout:
-                    orientation: 'vertical'
-                    size_hint_y: None
-                    height: dp(55)
-                    spacing: dp(4)
-                    Label:
-                        text: 'SEMESTER'
-                        font_size: '11sp'
-                        color: (1, 1, 1, 0.5)
-                        size_hint_y: None
-                        height: dp(15)
-                        text_size: self.size
-                        halign: 'left'
-                    Spinner:
-                        id: semester_spinner
-                        text: 'Select Semester'
-                        values: root.semesters
-                        size_hint_y: None
-                        height: dp(36)
-                        background_normal: ''
-                        background_color: (0.15, 0.18, 0.22, 1)
-                        color: (1, 1, 1, 1)
-                        font_size: '13sp'
-                        on_text: root.selected_semester = self.text
-
-                BoxLayout:
-                    orientation: 'vertical'
-                    size_hint_y: None
-                    height: dp(55)
-                    spacing: dp(4)
-                    Label:
-                        text: 'SUBJECT'
-                        font_size: '11sp'
-                        color: (1, 1, 1, 0.5)
-                        size_hint_y: None
-                        height: dp(15)
-                        text_size: self.size
-                        halign: 'left'
-                    Spinner:
-                        id: subject_spinner
-                        text: 'Select Subject'
-                        values: root.subjects
-                        size_hint_y: None
-                        height: dp(36)
-                        background_normal: ''
-                        background_color: (0.15, 0.18, 0.22, 1)
-                        color: (1, 1, 1, 1)
-                        font_size: '13sp'
-                        on_text: root.selected_subject = self.text
-
-                BoxLayout:
-                    orientation: 'vertical'
-                    size_hint_y: None
-                    height: dp(55)
-                    spacing: dp(4)
-                    Label:
-                        text: 'CLASS'
-                        font_size: '11sp'
-                        color: (1, 1, 1, 0.5)
-                        size_hint_y: None
-                        height: dp(15)
-                        text_size: self.size
-                        halign: 'left'
-                    Spinner:
-                        id: class_spinner
-                        text: 'Select Class'
-                        values: root.classes
-                        size_hint_y: None
-                        height: dp(36)
-                        background_normal: ''
-                        background_color: (0.15, 0.18, 0.22, 1)
-                        color: (1, 1, 1, 1)
-                        font_size: '13sp'
-                        on_text: root.selected_class = self.text
-
-                Widget:
-                    size_hint_y: None
-                    height: dp(20)
-
-        BoxLayout:
-            size_hint_y: None
-            height: dp(50)
-            padding: [dp(16), dp(6)]
-            canvas.before:
-                Color:
-                    rgba: (1, 1, 1, 0.1)
-                Line:
-                    points: [self.x, self.top, self.right, self.top]
-                    width: 1
-
-            Button:
-                text: 'SELECT CLASS'
-                font_size: '14sp'
-                bold: True
-                background_normal: ''
-                background_color: (0, 0, 0, 0)
-                on_release: root.select_class()
+                size_hint: (0.92, None)
+                height: dp(280)
+                spacing: dp(20)
+                padding: [dp(28), dp(24)]
                 canvas.before:
                     Color:
-                        rgba: (0.075, 0.498, 0.925, 1)
+                        rgba: BG_CARD
                     RoundedRectangle:
                         pos: self.pos
                         size: self.size
-                        radius: [10]
+                        radius: [16]
+                    Color:
+                        rgba: BORDER_COLOR
+                    Line:
+                        rounded_rectangle: [self.x, self.y, self.width, self.height, 16]
+
+                Label:
+                    text: 'Select your class'
+                    font_size: '18sp'
+                    bold: True
+                    color: WHITE
+                    size_hint_y: None
+                    height: dp(28)
+                    halign: 'left'
+                    text_size: self.size
+
+                # Three dropdowns side-by-side
+                BoxLayout:
+                    orientation: 'horizontal'
+                    size_hint_y: None
+                    height: dp(80)
+                    spacing: dp(16)
+
+                    # Semester
+                    BoxLayout:
+                        orientation: 'vertical'
+                        spacing: dp(4)
+                        Label:
+                            text: 'SEMESTER'
+                            font_size: '11sp'
+                            color: TEXT_MUTED
+                            size_hint_y: None
+                            height: dp(18)
+                            text_size: self.size
+                            halign: 'left'
+                        Spinner:
+                            id: semester_spinner
+                            text: 'Select Semester'
+                            values: root.semesters
+                            size_hint_y: None
+                            height: dp(44)
+                            background_normal: ''
+                            background_color: BG_SURFACE
+                            color: WHITE
+                            font_size: '13sp'
+                            on_text: root.selected_semester = self.text
+
+                    # Subject
+                    BoxLayout:
+                        orientation: 'vertical'
+                        spacing: dp(4)
+                        Label:
+                            text: 'SUBJECT'
+                            font_size: '11sp'
+                            color: TEXT_MUTED
+                            size_hint_y: None
+                            height: dp(18)
+                            text_size: self.size
+                            halign: 'left'
+                        Spinner:
+                            id: subject_spinner
+                            text: 'Select Subject'
+                            values: root.subjects
+                            size_hint_y: None
+                            height: dp(44)
+                            background_normal: ''
+                            background_color: BG_SURFACE
+                            color: WHITE
+                            font_size: '13sp'
+                            on_text: root.selected_subject = self.text
+
+                    # Class
+                    BoxLayout:
+                        orientation: 'vertical'
+                        spacing: dp(4)
+                        Label:
+                            text: 'CLASS'
+                            font_size: '11sp'
+                            color: TEXT_MUTED
+                            size_hint_y: None
+                            height: dp(18)
+                            text_size: self.size
+                            halign: 'left'
+                        Spinner:
+                            id: class_spinner
+                            text: 'Select Class'
+                            values: root.classes
+                            size_hint_y: None
+                            height: dp(44)
+                            background_normal: ''
+                            background_color: BG_SURFACE
+                            color: WHITE
+                            font_size: '13sp'
+                            on_text: root.selected_class = self.text
+
+                Widget:
+                    size_hint_y: 1
+
+                Button:
+                    text: 'SELECT CLASS'
+                    font_size: '16sp'
+                    bold: True
+                    size_hint_y: None
+                    height: dp(52)
+                    background_normal: ''
+                    background_color: 0, 0, 0, 0
+                    on_release: root.select_class()
+                    canvas.before:
+                        Color:
+                            rgba: PRIMARY_COLOR
+                        RoundedRectangle:
+                            pos: self.pos
+                            size: self.size
+                            radius: [12]
