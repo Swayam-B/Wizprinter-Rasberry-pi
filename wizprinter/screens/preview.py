@@ -159,6 +159,7 @@ class PreviewScreen(Screen):
             except OSError:
                 pass
         self.scanned_pdf_path = ""
+        api.clear_session()
         self._exam_local_pdf = ""
         self._exam_row = None
         self._preview_mode = "none"

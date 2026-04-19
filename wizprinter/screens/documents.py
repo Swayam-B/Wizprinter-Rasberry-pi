@@ -75,10 +75,18 @@ class DocumentsScreen(Screen):
         exam = self._exam_map.get(exam_name)
         if not exam:
             return
+        
         api.set_selection(exam_id=exam["id"])
+        
+        app = App.get_running_app()
         preview_screen = self.manager.get_screen("preview")
-        preview_screen.load_exam_for_preview(exam)
-        self.manager.current = "preview"
+
+        if preview_screen.scanned_pdf_path:
+            preview_screen.show_scan_jpeg_previews()
+            app.navigate("preview")
+        else:
+            preview_screen.load_exam_for_preview(exam)
+            app.navigate("preview")
 
     def go_back(self):
         App.get_running_app().navigate("classes", direction="right")
