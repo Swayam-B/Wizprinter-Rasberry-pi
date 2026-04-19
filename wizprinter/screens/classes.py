@@ -16,12 +16,18 @@ class ClassesScreen(Screen):
     selected_subject = StringProperty("")
     selected_class = StringProperty("")
 
+    navigation_mode = StringProperty("grading")
+
     # Internal maps: display name -> UUID
     _semester_ids = {}
     _subject_ids = {}
     _class_ids = {}
 
     def on_enter(self):
+        self.selected_semester = ""
+        self.selected_subject = ""
+        self.selected_class = ""
+
         self.semesters = ["Loading..."]
         self.subjects = []
         self.classes = []
@@ -93,7 +99,13 @@ class ClassesScreen(Screen):
         if not all([sel["semester_id"], sel["subject_id"], sel["class_id"]]):
             print("Please select semester, subject, and class before continuing.")
             return
-        App.get_running_app().navigate("documents")
+
+        app = App.get_running_app()
+        
+        if self.navigation_mode == "scan_flow":
+            app.navigate("scan")
+        else:
+            app.navigate("documents")
 
     def go_back(self):
         App.get_running_app().navigate("dashboard", direction="right")

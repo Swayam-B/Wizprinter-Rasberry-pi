@@ -171,8 +171,13 @@ class PreviewScreen(Screen):
         class_id = sel.get("class_id")
         pdf_path = self.scanned_pdf_path
 
+        if class_id and not exam_id:
+            print("Redirecting to select exam...")
+            App.get_running_app().navigate("documents")
+            return
+
         if not exam_id:
-            self.success_message = "No exam selected. Go back and select an exam."
+            self.success_message = "Please select an exam first."
             self.show_success = True
             Clock.schedule_once(lambda dt: setattr(self, "show_success", False), 3.0)
             return

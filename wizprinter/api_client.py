@@ -85,17 +85,17 @@ def get_professor_id() -> str:
     return _professor_id
 
 
-def set_selection(semester_id="", subject_id="", class_id="", exam_id=""):
+def set_selection(semester_id=None, subject_id=None, class_id=None, exam_id=None):
     global _selected_semester_id, _selected_subject_id, _selected_class_id, _selected_exam_id
-    if semester_id:
+    
+    if semester_id is not None:
         _selected_semester_id = semester_id
-    if subject_id:
+    if subject_id is not None:
         _selected_subject_id = subject_id
-    if class_id:
+    if class_id is not None:
         _selected_class_id = class_id
-    if exam_id:
+    if exam_id is not None:
         _selected_exam_id = exam_id
-
 
 def get_selection():
     return {
@@ -104,7 +104,6 @@ def get_selection():
         "class_id": _selected_class_id,
         "exam_id": _selected_exam_id,
     }
-
 
 def clear_session():
     global _token, _professor_id
