@@ -1,5 +1,8 @@
-# landing.kv — 800x480 layout
-# Uses the wider canvas: logo left, CTA right (side-by-side at larger size)
+# landing.kv — 800x480
+# BUG FIX: replaced FloatLayout with a plain BoxLayout (vertical).
+# FloatLayout children are drawn bottom-to-top; an inner FloatLayout
+# with size_hint_y covering the branding region was acting as an
+# invisible shield over the button.  A BoxLayout has no such overlap.
 
 <LandingScreen>:
     canvas.before:
@@ -9,113 +12,49 @@
             pos: self.pos
             size: self.size
 
-    # Two-column layout: branding takes 55%, call-to-action takes 45%
     BoxLayout:
-        orientation: 'horizontal'
-        padding: [dp(40), dp(32), dp(40), dp(32)]
-        spacing: dp(32)
+        orientation: 'vertical'
+        padding: [dp(24), dp(20)]
+        spacing: dp(16)
 
-        # ── Left: Branding ──────────────────────────────────
+        # 1. BRANDING GROUP — centred image + title
         BoxLayout:
             orientation: 'vertical'
-            size_hint_x: 0.52
-            spacing: dp(8)
-
-            Widget:
-                size_hint_y: 0.05
+            size_hint_y: 1
+            spacing: dp(4)
 
             Image:
                 source: 'assets/logo/whiteLogo.png'
-                size_hint: (1, None)
-                height: dp(180)
+                size_hint: (1, 1)
                 allow_stretch: True
                 keep_ratio: True
 
             Label:
                 text: 'WizPrinter'
-                font_size: '40sp'
+                font_size: '38sp'
                 bold: True
                 color: [1, 1, 1, 1]
                 size_hint_y: None
-                height: dp(56)
+                height: dp(52)
                 halign: 'center'
                 valign: 'middle'
                 text_size: self.size
 
-            Label:
-                text: 'Self-Service Print Kiosk'
-                font_size: '14sp'
-                color: TEXT_MUTED
-                size_hint_y: None
-                height: dp(24)
-                halign: 'center'
-                valign: 'middle'
-                text_size: self.size
-
-            Widget:
-                size_hint_y: 0.05
-
-        # ── Right: Action ───────────────────────────────────
-        BoxLayout:
-            orientation: 'vertical'
-            size_hint_x: 0.48
-            spacing: dp(20)
-
-            Widget:
-                size_hint_y: 1
-
-            # Status pill
-            BoxLayout:
-                size_hint_y: None
-                height: dp(36)
-                spacing: dp(8)
-                Widget:
-                Widget:
-                    size_hint: None, None
-                    size: dp(10), dp(10)
-                    pos_hint: {'center_y': 0.5}
-                    canvas:
-                        Color:
-                            rgba: SUCCESS_COLOR
-                        Ellipse:
-                            pos: self.pos
-                            size: dp(10), dp(10)
-                Label:
-                    text: 'PRINTER READY'
-                    font_size: '11sp'
-                    bold: True
-                    color: SUCCESS_COLOR
-                    size_hint_x: None
-                    width: dp(120)
-                    valign: 'middle'
-                    text_size: self.size
-                Widget:
-
-            Button:
-                text: 'TAP TO START'
-                size_hint: (1, None)
-                height: dp(72)
-                font_size: '24sp'
-                bold: True
-                color: [1, 1, 1, 1]
-                background_color: 0, 0, 0, 0
-                on_release: root.on_tap_start()
-                canvas.before:
-                    Color:
-                        rgba: PRIMARY_COLOR
-                    RoundedRectangle:
-                        pos: self.pos
-                        size: self.size
-                        radius: [14]
-
-            Label:
-                text: 'Scan · Print · Grade'
-                font_size: '12sp'
-                color: TEXT_MUTED
-                size_hint_y: None
-                height: dp(24)
-                halign: 'center'
-                text_size: self.size
-
-            Widget:
-                size_hint_y: 1
+        # 2. THE BUTTON — lives below the branding, never overlapped
+        Button:
+            text: 'TAP TO START'
+            size_hint: (0.75, None)
+            height: dp(65)
+            pos_hint: {'center_x': 0.5}
+            font_size: '22sp'
+            bold: True
+            color: [1, 1, 1, 1]
+            background_color: 0, 0, 0, 0
+            on_release: root.on_tap_start()
+            canvas.before:
+                Color:
+                    rgba: PRIMARY_COLOR
+                RoundedRectangle:
+                    pos: self.pos
+                    size: self.size
+                    radius: [12]
