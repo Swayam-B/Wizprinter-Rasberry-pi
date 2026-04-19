@@ -24,9 +24,13 @@ class DashboardScreen(Screen):
         self.current_time = datetime.now().strftime('%I:%M %p')
 
     def nav_scan(self):
-        App.get_running_app().navigate('scan')
+        classes_screen = App.get_running_app().root.get_screen('classes')
+        classes_screen.navigation_mode = 'scan_flow'
+        App.get_running_app().navigate('classes')
 
     def nav_classes(self):
+        classes_screen = App.get_running_app().root.get_screen('classes')
+        classes_screen.navigation_mode = 'grading'
         App.get_running_app().navigate('classes')
 
     def nav_settings(self):
