@@ -13,6 +13,7 @@ from kivy.clock import Clock
 import wizprinter.api_client as api
 from wizprinter.utils.image_file import is_valid_jpeg
 from wizprinter.utils.pdf_preview import pdf_to_png_paths
+from wizprinter.utils.printer import PrinterManager
 
 
 class PreviewScreen(Screen):
@@ -25,6 +26,7 @@ class PreviewScreen(Screen):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
+        self.printer = PrinterManager()
         self._preview_mode = "none"  # "scan" | "exam"
         self._exam_row = None
         self._exam_local_pdf = ""
@@ -302,14 +304,13 @@ class PreviewScreen(Screen):
 
     def _send_to_printer(self, pdf_path):
         self.success_message = "Printing..."
-        try:
-            if os.path.exists(pdf_path):
-                subprocess.run(["lp", pdf_path], check=True)
-                self.success_message = "Grading complete! Printed."
-            else:
-                self.success_message = "Graded PDF not found."
-        except Exception as e:
-            self.success_message = f"Print error: {e}"
+        success = self.printer.print_document(pdf_path)
+        
+        if success:
+            self.success_message = "Grading complete! Printed."
+        else:
+            self.success_message = "Print Error: Check OfficeJet status."
+            
         Clock.schedule_once(self._finish, 3.0)
 
     def _on_grade_error(self, exc):
@@ -324,9 +325,17 @@ class PreviewScreen(Screen):
     def print_document(self):
         """Print student scan PDF or, on exam preview, the downloaded exam PDF."""
         pdf_path = self.scanned_pdf_path or self._exam_local_pdf
+
         if not pdf_path or not os.path.exists(pdf_path):
+            print("Print attempted but path is invalid.")
             return
-        try:
-            subprocess.run(["lp", pdf_path], check=True)
-        except Exception as e:
-            print(f"Print error: {e}")
+        
+        success = self.printer.print_document(pdf_path)
+        
+        if success:
+            self.success_message = "Sent to OfficeJet!"
+            self.show_success = True
+            Clock.schedule_once(lambda dt: setattr(self, "show_success", False), 3.0)
+        else:
+            self.success_message = "Hardware Error: Check Printer Connection"
+            self.show_success = True
