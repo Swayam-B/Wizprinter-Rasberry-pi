@@ -1,7 +1,3 @@
-# preview.kv — 800x480 layout
-# PDF preview fills a much larger central area; action buttons are row-based
-# and sit in a proper footer bar rather than floating over the content.
-
 <PreviewScreen>:
     canvas.before:
         Color:
@@ -13,12 +9,11 @@
     BoxLayout:
         orientation: 'vertical'
 
-        # ── Header ──────────────────────────────────────────
+        # --- Top Status Bar ---
         BoxLayout:
             size_hint_y: None
-            height: dp(52)
-            padding: [dp(12), dp(6)]
-            spacing: dp(8)
+            height: '40dp'
+            padding: ['8dp', '4dp']
             canvas.before:
                 Color:
                     rgba: BG_DARK
@@ -29,156 +24,119 @@
                     rgba: 1, 1, 1, 0.1
                 Line:
                     points: [self.x, self.y, self.right, self.y]
-
-            # Back button
+            
             Button:
                 size_hint: None, 1
-                width: dp(44)
+                width: '36dp'
                 background_color: TRANSPARENT
                 on_release: root.go_back()
                 Widget:
                     center: self.parent.center
-                    size: dp(20), dp(20)
+                    size: dp(16), dp(16)
                     canvas:
                         Color:
                             rgba: WHITE
                         Line:
-                            width: 1.5
-                            points: [self.center_x + dp(5), self.center_y - dp(7), self.center_x - dp(5), self.center_y, self.center_x + dp(5), self.center_y + dp(7)]
+                            width: 1.2
+                            points: [self.center_x + dp(4), self.center_y - dp(6), self.center_x - dp(4), self.center_y, self.center_x + dp(4), self.center_y + dp(6)]
 
             Label:
                 text: 'Document Preview'
-                font_size: '17sp'
+                font_size: '14sp'
                 bold: True
                 color: WHITE
                 text_size: self.size
                 halign: 'left'
                 valign: 'middle'
-
-            Widget:
-
+            
             Label:
                 size_hint_x: None
-                width: dp(80)
+                width: '60dp'
                 text: root.page_info
-                font_size: '12sp'
-                color: TEXT_MUTED
+                font_size: '10sp'
+                bold: True
+                color: 0.4, 0.4, 0.4, 1
                 text_size: self.size
                 halign: 'right'
                 valign: 'middle'
-
-        # ── PDF Viewer ───────────────────────────────────────
-        # The viewer now uses ~86% of the remaining vertical space,
-        # with comfortable horizontal margins to show the dark background.
-        ScrollView:
-            id: scroll_container
-            size_hint: (1, 1)
-            do_scroll_x: False
-            do_scroll_y: True
-
-            # White page container
-            BoxLayout:
-                orientation: 'vertical'
-                size_hint_y: None
-                height: self.minimum_height
-                padding: [dp(40), dp(16)]
-                spacing: dp(0)
+        # --- Preview Content Area ---
+        FloatLayout:
+            ScrollView:
+                id: scroll_container
+                size_hint: 0.9, 0.82
+                pos_hint: {'center_x': 0.5, 'center_y': 0.55}
+                do_scroll_x: False
+                do_scroll_y: True
+                
                 canvas.before:
                     Color:
-                        rgba: BG_DARK
-                    Rectangle:
+                        rgba: 1, 1, 1, 1
+                    RoundedRectangle:
                         pos: self.pos
                         size: self.size
+                        radius: [4]
 
+                # This grid allows us to stack the pages exactly like the scan thumbnails
                 GridLayout:
                     id: preview_container
                     cols: 1
                     size_hint_y: None
                     height: self.minimum_height
-                    spacing: dp(12)
-                    padding: [0, dp(4)]
+                    spacing: dp(10)
+                    padding: dp(5)
+
+            # --- Floating Action Buttons ---
+            BoxLayout:
+                pos_hint: {'center_x': 0.5, 'y': 0.02}
+                size_hint: 0.9, None
+                height: '72dp'
+                spacing: '12dp'
+
+                Button:
+                    background_color: TRANSPARENT
+                    on_release: root.delete_document()
                     canvas.before:
                         Color:
-                            rgba: 1, 1, 1, 1
-                        RoundedRectangle:
-                            pos: self.pos
-                            size: self.size
-                            radius: [6]
+                            rgba: DANGER_COLOR
+                        Ellipse:
+                            pos: self.center_x - dp(28), self.center_y - dp(28)
+                            size: dp(56), dp(56)
+                    Label:
+                        text: 'DELETE'
+                        font_size: '8sp'
+                        bold: True
+                        center: self.parent.center
 
-        # ── Action Footer ────────────────────────────────────
-        # Full-width button row — no floating, no overlap.
-        BoxLayout:
-            size_hint_y: None
-            height: dp(72)
-            padding: [dp(24), dp(10)]
-            spacing: dp(16)
-            canvas.before:
-                Color:
-                    rgba: BG_SURFACE
-                Rectangle:
-                    pos: self.pos
-                    size: self.size
-                Color:
-                    rgba: 1, 1, 1, 0.08
-                Line:
-                    points: [self.x, self.top, self.right, self.top]
+                Button:
+                    background_color: TRANSPARENT
+                    on_release: root.grade_document()
+                    canvas.before:
+                        Color:
+                            rgba: PRIMARY_COLOR
+                        Ellipse:
+                            pos: self.center_x - dp(34), self.center_y - dp(34)
+                            size: dp(68), dp(68)
+                    Label:
+                        text: 'GRADE'
+                        font_size: '10sp'
+                        bold: True
+                        center: self.parent.center
 
-            # DELETE
-            Button:
-                background_color: TRANSPARENT
-                on_release: root.delete_document()
-                canvas.before:
-                    Color:
-                        rgba: DANGER_COLOR
-                    RoundedRectangle:
-                        pos: self.pos
-                        size: self.size
-                        radius: [10]
-                Label:
-                    text: 'DELETE'
-                    font_size: '13sp'
-                    bold: True
-                    color: WHITE
-                    center: self.parent.center
+                Button:
+                    background_color: TRANSPARENT
+                    on_release: root.print_document()
+                    canvas.before:
+                        Color:
+                            rgba: SUCCESS_COLOR
+                        Ellipse:
+                            pos: self.center_x - dp(28), self.center_y - dp(28)
+                            size: dp(56), dp(56)
+                    Label:
+                        text: 'PRINT'
+                        font_size: '8sp'
+                        bold: True
+                        center: self.parent.center
 
-            # GRADE (wider / primary)
-            Button:
-                size_hint_x: 1.4
-                background_color: TRANSPARENT
-                on_release: root.grade_document()
-                canvas.before:
-                    Color:
-                        rgba: PRIMARY_COLOR
-                    RoundedRectangle:
-                        pos: self.pos
-                        size: self.size
-                        radius: [10]
-                Label:
-                    text: 'GRADE'
-                    font_size: '15sp'
-                    bold: True
-                    color: WHITE
-                    center: self.parent.center
-
-            # PRINT
-            Button:
-                background_color: TRANSPARENT
-                on_release: root.print_document()
-                canvas.before:
-                    Color:
-                        rgba: SUCCESS_COLOR
-                    RoundedRectangle:
-                        pos: self.pos
-                        size: self.size
-                        radius: [10]
-                Label:
-                    text: 'PRINT'
-                    font_size: '13sp'
-                    bold: True
-                    color: WHITE
-                    center: self.parent.center
-
-    # ── Success overlay ──────────────────────────────────────
     FloatLayout:
         size_hint: 1, 1
         opacity: 1 if root.show_success else 0
@@ -195,19 +153,18 @@
             anchor_y: 'center'
             BoxLayout:
                 orientation: 'vertical'
-                size_hint: (None, None)
-                size: dp(360), dp(100)
-                spacing: dp(10)
+                size_hint: 0.85, None
+                height: dp(90)
+                spacing: dp(8)
                 Label:
                     text: root.success_message
-                    font_size: '18sp'
+                    font_size: '14sp'
                     bold: True
                     color: (0.3, 0.9, 0.4, 1)
                     halign: 'center'
                     text_size: self.size
                 Label:
                     text: 'Please wait...'
-                    font_size: '13sp'
+                    font_size: '11sp'
                     color: (1, 1, 1, 0.6)
                     halign: 'center'
-                    text_size: self.size

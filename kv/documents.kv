@@ -1,7 +1,5 @@
 #:import dp kivy.metrics.dp
 
-# documents.kv — 800x480 layout
-
 <DocumentsScreen>:
     canvas.before:
         Color:
@@ -15,25 +13,21 @@
 
         StatusBar:
             size_hint_y: None
-            height: dp(52)
+            height: dp(45)
             title: 'Select Exam'
             show_back: True
             on_back: root.go_back()
 
-        # Status banner
         Label:
             text: root.status_text
             size_hint_y: None
-            height: dp(28)
-            font_size: '13sp'
+            height: dp(24)
+            font_size: '12sp'
             color: 1, 0.8, 0.2, 1
-            halign: 'center'
-            text_size: self.size
 
         ScrollView:
             size_hint_y: 1
             do_scroll_x: False
-            # Constrain list width on wide screen for readability
             BoxLayout:
                 id: doc_list
                 orientation: 'vertical'
@@ -43,4 +37,4 @@
         BottomNav:
             active_tab: 'documents'
             size_hint_y: None
-            height: dp(56)
+            height: dp(45)

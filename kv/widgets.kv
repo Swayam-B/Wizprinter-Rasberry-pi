@@ -1,54 +1,45 @@
-# widgets.kv — 800x480 layout
-# StatusBar taller (52dp); icons slightly larger.
-
 <StatusBar>:
     title: ''
-    hide_home: False
-    show_back: False
-
+    hide_home: False  
+    show_back: False  # NEW: Property for the Login screen
+    
     orientation: 'horizontal'
     size_hint_y: None
-    height: dp(52)
-    padding: [dp(6), 0]
-    canvas.before:
-        Color:
-            rgba: BG_DARK
-        Rectangle:
-            pos: self.pos
-            size: self.size
-        Color:
-            rgba: 0.075, 0.498, 0.925, 0.18
-        Line:
-            points: [self.x, self.y, self.right, self.y]
+    height: dp(45)
+    padding: [dp(5), 0]
 
-    # Left button slot
+    # LEFT BUTTON SLOT (Back or Home)
     Button:
         size_hint: (None, None) if (not root.hide_home or root.show_back) else (0, 0)
-        width: dp(52) if (not root.hide_home or root.show_back) else 0
-        height: dp(52)
+        width: dp(50) if (not root.hide_home or root.show_back) else 0
+        height: dp(45)
         background_color: 0, 0, 0, 0
-
-        on_release:
-            if root.show_back and root.back: root.back()
-            elif root.show_back: root.go_back()
+        
+        # LOGIC: If show_back is on, go to landing. Else go to dashboard.
+        on_release: 
+            if root.show_back: root.go_back()
             elif not root.hide_home: app.root.current = 'dashboard'
-
+        
         canvas.after:
             Color:
                 rgba: PRIMARY_COLOR if (not root.hide_home or root.show_back) else [0,0,0,0]
+            
+            # --- DRAW BACK ARROW (If show_back is True) ---
             Line:
-                width: dp(1.8)
-                points:
-                    [self.center_x + dp(6), self.center_y - dp(9), self.center_x - dp(6), self.center_y, self.center_x + dp(6), self.center_y + dp(9)] if root.show_back else [0,0,0,0,0,0]
+                width: 1.5
+                points: 
+                    [self.center_x + dp(5), self.center_y - dp(8), self.center_x - dp(5), self.center_y, self.center_x + dp(5), self.center_y + dp(8)] if root.show_back else [0,0,0,0,0,0]
+            
+            # --- DRAW HOME ICON (Existing Logic) ---
             Triangle:
-                points: [self.x + dp(16), self.y + dp(26), self.right - dp(16), self.y + dp(26), self.center_x, self.y + dp(38)] if (not root.hide_home and not root.show_back) else [0,0,0,0,0,0]
+                points: [self.x + dp(15), self.y + dp(22), self.right - dp(15), self.y + dp(22), self.center_x, self.y + dp(34)] if (not root.hide_home and not root.show_back) else [0,0,0,0,0,0]
             Rectangle:
-                pos: (self.center_x - dp(8), self.y + dp(14)) if (not root.hide_home and not root.show_back) else (0,0)
-                size: (dp(16), dp(12)) if (not root.hide_home and not root.show_back) else (0,0)
+                pos: (self.center_x - dp(7), self.y + dp(12)) if (not root.hide_home and not root.show_back) else (0,0)
+                size: (dp(14), dp(10)) if (not root.hide_home and not root.show_back) else (0,0)
 
     Label:
         text: root.title
-        font_size: '16sp'
+        font_size: '14sp'
         bold: True
         color: WHITE
         halign: 'left'

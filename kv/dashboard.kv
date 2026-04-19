@@ -1,6 +1,3 @@
-# dashboard.kv — 800x480 layout
-# Header bar taller; three action tiles in a wider grid; more breathing room.
-
 <DashboardScreen>:
     canvas.before:
         Color:
@@ -12,11 +9,11 @@
     BoxLayout:
         orientation: 'vertical'
 
-        # ── Header ──────────────────────────────────────────
+        # Header bar
         BoxLayout:
             size_hint_y: None
-            height: dp(56)
-            padding: [dp(20), dp(8)]
+            height: dp(50)
+            padding: [dp(16), dp(8)]
             canvas.before:
                 Color:
                     rgba: BG_DARK
@@ -24,32 +21,34 @@
                     pos: self.pos
                     size: self.size
                 Color:
-                    rgba: 0.075, 0.498, 0.925, 0.25
+                    rgba: 0.075, 0.498, 0.925, 0.2
                 Line:
                     points: [self.x, self.y, self.right, self.y]
-
-            # Logo spacer
-            Widget:
-                size_hint_x: None
-                width: dp(42)
-
-            Label:
-                text: 'WizPrinter'
-                font_size: '20sp'
-                bold: True
-                color: WHITE
-                halign: 'left'
-                valign: 'middle'
-                text_size: self.size
-
-            Widget:
-
-            # Status pill
+            
+            # Left: brand
             BoxLayout:
-                size_hint_x: None
-                width: dp(160)
+                size_hint_x: 0.4
                 spacing: dp(8)
+                
+                # Spacer to make room for the floating logo
+                Widget:
+                    size_hint_x: None
+                    width: dp(35)
 
+                Label:
+                    text: 'WizPrinter'
+                    font_size: '16sp'
+                    bold: True
+                    color: WHITE
+                    halign: 'left'
+                    valign: 'middle'
+                    text_size: self.size
+
+            # Right: status (READY / TIME)
+            BoxLayout:
+                size_hint_x: 0.6
+                spacing: dp(8)
+                Widget:
                 Widget:
                     size_hint: None, None
                     size: dp(10), dp(10)
@@ -59,40 +58,41 @@
                             rgba: SUCCESS_COLOR
                         Ellipse:
                             pos: self.pos
-                            size: dp(10), dp(10)
-
+                            size: dp(8), dp(8)
+                
                 Label:
                     text: 'READY'
                     font_size: '12sp'
                     color: 1, 1, 1, 0.5
                     size_hint_x: None
                     width: dp(50)
-
+                
                 Label:
                     text: root.current_time
-                    font_size: '16sp'
+                    font_size: '14sp'
                     bold: True
                     color: WHITE
                     size_hint_x: None
-                    width: dp(90)
+                    width: dp(80)
                     halign: 'right'
                     valign: 'middle'
                     text_size: self.size
 
-        # ── Tile Grid ───────────────────────────────────────
-        # Three equal tiles across the full width with generous padding.
+        # Main Dashboard Area
         BoxLayout:
             orientation: 'horizontal'
-            padding: [dp(24), dp(20), dp(24), dp(20)]
-            spacing: dp(20)
+            padding: dp(16)
+            spacing: dp(16)
             size_hint_y: 1
 
-            # GRADE tile
+            # LEFT COLUMN: GRADE
             Button:
-                font_size: '28sp'
+                text: 'GRADE'
+                font_size: '22sp'
                 bold: True
                 color: PRIMARY_COLOR
                 background_color: 0, 0, 0, 0
+                size_hint_x: 0.5
                 on_release: root.nav_classes()
                 canvas.before:
                     Color:
@@ -100,121 +100,63 @@
                     RoundedRectangle:
                         pos: self.pos
                         size: self.size
-                        radius: [16]
+                        radius: [12]
                     Color:
                         rgba: 0.3, 0.35, 0.45, 1
                     Line:
-                        rounded_rectangle: [self.x, self.y, self.width, self.height, 16]
-                BoxLayout:
-                    orientation: 'vertical'
-                    center: self.parent.center
-                    size: self.parent.size
-                    spacing: dp(8)
-                    Widget:
-                    Label:
-                        text: '[b]GRADE[/b]'
-                        markup: True
-                        font_size: '26sp'
-                        color: PRIMARY_COLOR
-                        halign: 'center'
-                        size_hint_y: None
-                        height: dp(40)
-                    Label:
-                        text: 'Grade exams'
-                        font_size: '12sp'
-                        color: TEXT_MUTED
-                        halign: 'center'
-                        size_hint_y: None
-                        height: dp(20)
-                    Widget:
+                        rounded_rectangle: [self.x, self.y, self.width, self.height, 12]
 
-            # SCAN tile
-            Button:
-                font_size: '28sp'
-                bold: True
-                color: PRIMARY_COLOR
-                background_color: 0, 0, 0, 0
-                on_release: root.nav_scan()
-                canvas.before:
-                    Color:
-                        rgba: BG_CARD
-                    RoundedRectangle:
-                        pos: self.pos
-                        size: self.size
-                        radius: [16]
-                    Color:
-                        rgba: 0.3, 0.35, 0.45, 1
-                    Line:
-                        rounded_rectangle: [self.x, self.y, self.width, self.height, 16]
-                BoxLayout:
-                    orientation: 'vertical'
-                    center: self.parent.center
-                    size: self.parent.size
-                    spacing: dp(8)
-                    Widget:
-                    Label:
-                        text: '[b]SCAN[/b]'
-                        markup: True
-                        font_size: '26sp'
-                        color: PRIMARY_COLOR
-                        halign: 'center'
-                        size_hint_y: None
-                        height: dp(40)
-                    Label:
-                        text: 'Scan document'
-                        font_size: '12sp'
-                        color: TEXT_MUTED
-                        halign: 'center'
-                        size_hint_y: None
-                        height: dp(20)
-                    Widget:
+            # RIGHT COLUMN: SCAN/SETTINGS
+            BoxLayout:
+                orientation: 'vertical'
+                spacing: dp(16)
+                size_hint_x: 0.5
 
-            # SETTINGS tile
-            Button:
-                font_size: '28sp'
-                bold: True
-                color: PRIMARY_COLOR
-                background_color: 0, 0, 0, 0
-                on_release: root.nav_settings()
-                canvas.before:
-                    Color:
-                        rgba: BG_CARD
-                    RoundedRectangle:
-                        pos: self.pos
-                        size: self.size
-                        radius: [16]
-                    Color:
-                        rgba: 0.3, 0.35, 0.45, 1
-                    Line:
-                        rounded_rectangle: [self.x, self.y, self.width, self.height, 16]
-                BoxLayout:
-                    orientation: 'vertical'
-                    center: self.parent.center
-                    size: self.parent.size
-                    spacing: dp(8)
-                    Widget:
-                    Label:
-                        text: '[b]SETTINGS[/b]'
-                        markup: True
-                        font_size: '26sp'
-                        color: PRIMARY_COLOR
-                        halign: 'center'
-                        size_hint_y: None
-                        height: dp(40)
-                    Label:
-                        text: 'Configure'
-                        font_size: '12sp'
-                        color: TEXT_MUTED
-                        halign: 'center'
-                        size_hint_y: None
-                        height: dp(20)
-                    Widget:
+                Button:
+                    text: 'SCAN'
+                    font_size: '22sp'
+                    bold: True
+                    color: PRIMARY_COLOR
+                    background_color: 0, 0, 0, 0
+                    on_release: root.nav_scan()
+                    canvas.before:
+                        Color:
+                            rgba: BG_CARD
+                        RoundedRectangle:
+                            pos: self.pos
+                            size: self.size
+                            radius: [12]
+                        Color:
+                            rgba: 0.3, 0.35, 0.45, 1
+                        Line:
+                            rounded_rectangle: [self.x, self.y, self.width, self.height, 12]
 
-    # ── Floating Logo ────────────────────────────────────────
+                Button:
+                    text: 'SETTINGS'
+                    font_size: '22sp'
+                    bold: True
+                    color: PRIMARY_COLOR
+                    background_color: 0, 0, 0, 0
+                    on_release: root.nav_settings()
+                    canvas.before:
+                        Color:
+                            rgba: BG_CARD
+                        RoundedRectangle:
+                            pos: self.pos
+                            size: self.size
+                            radius: [12]
+                        Color:
+                            rgba: 0.3, 0.35, 0.45, 1
+                        Line:
+                            rounded_rectangle: [self.x, self.y, self.width, self.height, 12]
+
+    # --- FLOATING LOGO LAYER ---
     Image:
         source: 'assets/logo/whiteLogo.png'
         size_hint: (None, None)
-        size: dp(80), dp(80)
-        pos: (dp(2), root.height - self.height + dp(14))
+        # Scaled larger to handle uncropped transparency
+        size: dp(70), dp(70)
+        # Positioned at absolute top left, nudged to center with the header bar
+        pos: (dp(0), root.height - self.height + dp(10))
         allow_stretch: True
         keep_ratio: True
