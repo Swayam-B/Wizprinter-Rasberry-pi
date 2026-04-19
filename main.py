@@ -1,25 +1,37 @@
-#!/usr/bin/env python3
 """
 WizPrinter Kiosk Application
-Raspberry Pi 3.5" Touchscreen (480x320) Self-Service Printing Kiosk
+800x480 HDMI Display — Responsive Layout
 """
 
 import os
 import sys
 
-# Set Kivy configuration BEFORE importing kivy
+from dotenv import load_dotenv
+
+load_dotenv()
+
 os.environ['KIVY_WINDOW'] = 'sdl2'
 
 from kivy.config import Config
 
-# Configure for 480x320 kiosk display
-Config.set('graphics', 'width', '480')
-Config.set('graphics', 'height', '320')
-Config.set('graphics', 'resizable', '0')
+SCREEN_W = 800
+SCREEN_H = 480
+
+# Configure for 800x480 HDMI display
+Config.set('graphics', 'width',      str(SCREEN_W))
+Config.set('graphics', 'height',     str(SCREEN_H))
+Config.set('graphics', 'resizable',  '0')
 Config.set('graphics', 'borderless', '1')
-Config.set('graphics', 'fullscreen', '0')  # Set to '1' on actual Pi
-Config.set('kivy', 'keyboard_mode', 'systemanddock')
-Config.set('input', 'mouse', 'mouse,multitouch_on_demand')
+Config.set('graphics', 'fullscreen', '1')
+Config.set('kivy', 'keyboard_mode',  'systemanddock')
+Config.set('input', 'mouse',         'mouse,multitouch_on_demand')
+
+BASE_W = 480
+SCALE_FACTOR = SCREEN_W / BASE_W
+
+os.environ['WP_SCALE']    = f'{SCALE_FACTOR:.4f}'
+os.environ['WP_SCREEN_W'] = str(SCREEN_W)
+os.environ['WP_SCREEN_H'] = str(SCREEN_H)
 
 from wizprinter.app import WizPrinterApp
 
