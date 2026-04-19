@@ -10,27 +10,35 @@ class StatusBar(BoxLayout):
     hide_home = BooleanProperty(False)
     show_back = BooleanProperty(False)
     show_wifi = BooleanProperty(True)
-
+    
+    # 1. Matches 'on_back' in login.kv
+    back = ObjectProperty(None)
+    # 2. Matches 'on_back_release' in settings.kv
     on_back_release = ObjectProperty(None)
 
     def go_back(self):
         """Standard back navigation logic."""
         app = App.get_running_app()
-        if app.root.current == 'login':
+        # If a specific action was passed via KV, do that first
+        if self.back:
+            self.back()
+        elif self.on_back_release:
+            self.on_back_release()
+        # Otherwise, use the default app-level back logic
+        elif app.root.current == 'login':
             app.root.current = 'landing'
         else:
-            if self.on_back_release:
-                self.on_back_release()
-            else:
-                app.navigate('dashboard', direction='right')
+            # app.go_back() usually defaults to dashboard in your setup
+            app.navigate('dashboard', direction='right')
 
     def on_touch_down(self, touch):
         """
-        Consumes the touch event if it hits the back button area.
-        This prevents 'ghost touches' from hitting the Dashboard/Scan buttons.
+        Kills the touch propagation to prevent it hitting buttons 
+        underneath (like SCAN) on the Dashboard.
         """
         if self.collide_point(*touch.pos):
-            if self.show_back and touch.x < (self.x + 60):
+            # If touching the back-button area (left side of status bar)
+            if self.show_back and touch.x < (self.x + dp(80)):
                 self.go_back()
-                return True
+                return True # This is the "Ghost Touch" fix
         return super().on_touch_down(touch)
