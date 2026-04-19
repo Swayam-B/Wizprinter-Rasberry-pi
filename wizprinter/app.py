@@ -30,7 +30,7 @@ class WizPrinterApp(App):
 
     def build(self):
         # Set window properties
-        Window.size = (480, 320)
+        Window.size = (800, 480)
         Window.clearcolor = BG_DARK
 
         # Get the absolute path to the project root
