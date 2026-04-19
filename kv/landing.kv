@@ -10,36 +10,34 @@
         # 1. BRANDING GROUP
         FloatLayout:
             size_hint: (None, None)
-            size: dp(200), dp(240)
+            size: dp(300), dp(350)
             # Keeping the whole group pinned near the top
             pos_hint: {'center_x': 0.5, 'top': 0.95}
 
             Image:
                 source: 'assets/logo/whiteLogo.png'
                 size_hint: (None, None)
-                size: dp(200), dp(200)
+                size: dp(250), dp(250)
                 pos_hint: {'center_x': 0.5, 'top': 1} 
                 allow_stretch: True
                 keep_ratio: True
 
             Label:
                 text: 'WizPrinter'
-                font_size: '38sp'
+                font_size: '48sp'
                 bold: True
                 color: [1, 1, 1, 1]
                 size_hint: (None, None)
                 size: self.texture_size
-                # --- THE ADJUSTMENT ---
-                # Changed from 0.15 to 0.3 to pull the text HIGHER into the logo
                 pos_hint: {'center_x': 0.5, 'center_y': 0.3}
 
         # 2. THE BUTTON
         Button:
             text: 'TAP TO START'
-            size_hint: (0.85, None)
-            height: dp(60)
-            pos_hint: {'center_x': 0.5, 'y': 0.1}
-            font_size: '22sp'
+            size_hint: (0.7, None)
+            height: dp(80)
+            pos_hint: {'center_x': 0.5, 'y': 0.15}
+            font_size: '26sp'
             bold: True
             color: [1, 1, 1, 1]
             background_color: 0, 0, 0, 0
@@ -50,4 +48,4 @@
                 RoundedRectangle:
                     pos: self.pos
                     size: self.size
-                    radius: [12]
+                    radius: [16]

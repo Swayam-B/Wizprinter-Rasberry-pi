@@ -22,19 +22,19 @@ WHITE = [1, 1, 1, 1]
 TRANSPARENT = [0, 0, 0, 0]
 
 # ─── Dimensions (480x320 kiosk) ─────────────────────────────
-SCREEN_W = 480
-SCREEN_H = 320
-STATUS_BAR_H = 40
+SCREEN_W = 800
+SCREEN_H = 480
+STATUS_BAR_H = 60
 BOTTOM_NAV_H = 48
 TOUCH_TARGET_MIN = 44  # Minimum touch target for resistive screen
-BUTTON_H_LARGE = 60
+BUTTON_H_LARGE = 80
 BUTTON_H_MEDIUM = 44
-BUTTON_RADIUS = 12
+BUTTON_RADIUS = 16
 
 # ─── Typography ──────────────────────────────────────────────
-FONT_SIZE_XL = '42sp'
-FONT_SIZE_LG = '20sp'
-FONT_SIZE_MD = '14sp'
+FONT_SIZE_XL = '56sp'
+FONT_SIZE_LG = '28sp'
+FONT_SIZE_MD = '18sp'
 FONT_SIZE_SM = '12sp'
 FONT_SIZE_XS = '10sp'
 FONT_SIZE_XXS = '8sp'
