@@ -112,48 +112,48 @@ class ScanScreen(Screen):
         Clock.schedule_once(self._perform_hardware_scan, 0.2)
 
     def _perform_hardware_scan(self, dt):
-    file_pattern = os.path.join(self.temp_dir, "page_%d.jpg")
+        file_pattern = os.path.join(self.temp_dir, "page_%d.jpg")
 
-    cmd = [
-        "scanimage",
-        "-d", self.device_path,
-        "--source", "ADF",
-        "--format=jpeg",
-        "--batch=" + file_pattern,
-        "--batch-start", str(len(self.scanned_images) + 1),
-        "--mode", "Gray",
-        "--resolution", "150",
-    ]
+        cmd = [
+            "scanimage",
+            "-d", self.device_path,
+            "--source", "ADF",
+            "--format=jpeg",
+            "--batch=" + file_pattern,
+            "--batch-start", str(len(self.scanned_images) + 1),
+            "--mode", "Gray",
+            "--resolution", "150",
+        ]
 
-    try:
-        result = subprocess.run(
-            cmd,
-            capture_output=True,
-            text=True
-        )
+        try:
+            result = subprocess.run(
+                cmd,
+                capture_output=True,
+                text=True
+            )
 
-        if result.returncode != 0:
-            if "out of paper" in result.stderr.lower():
-                self.status_msg = "ADF EMPTY"
-            else:
-                self.status_msg = "SCAN ERROR"
-            return
+            if result.returncode != 0:
+                if "out of paper" in result.stderr.lower():
+                    self.status_msg = "ADF EMPTY"
+                else:
+                    self.status_msg = "SCAN ERROR"
+                return
 
-        new_files = sorted([
-            os.path.abspath(os.path.join(self.temp_dir, f))
-            for f in os.listdir(self.temp_dir)
-            if f.startswith("page_") and f.endswith(".jpg")
-        ])
-        
-        self.scanned_images = new_files
-        self.page_info = f"Scanned {len(self.scanned_images)} Pages"
-        self.status_msg = "READY"
+            new_files = sorted([
+                os.path.abspath(os.path.join(self.temp_dir, f))
+                for f in os.listdir(self.temp_dir)
+                if f.startswith("page_") and f.endswith(".jpg")
+            ])
+            
+            self.scanned_images = new_files
+            self.page_info = f"Scanned {len(self.scanned_images)} Pages"
+            self.status_msg = "READY"
 
-    except Exception as e:
-        self.status_msg = "SYSTEM ERROR"
-        print(f"Batch Scan Exception: {e}")
-    finally:
-        self.is_scanning = False
+        except Exception as e:
+            self.status_msg = "SYSTEM ERROR"
+            print(f"Batch Scan Exception: {e}")
+        finally:
+            self.is_scanning = False
 
     def delete_page(self):
         """Removes the most recent page from the batch and disk."""
