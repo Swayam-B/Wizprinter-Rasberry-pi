@@ -1,5 +1,8 @@
 #:import max builtins.max
 
+# scan.kv — 800x480 layout
+# Preview list takes more horizontal real estate; controls column is wider.
+
 <ScanScreen>:
     canvas.before:
         Color:
@@ -11,11 +14,11 @@
     BoxLayout:
         orientation: 'vertical'
 
-        # Custom StatusBar
+        # ── Header ──────────────────────────────────────────
         BoxLayout:
             size_hint_y: None
-            height: dp(45)
-            padding: [dp(10), 0]
+            height: dp(52)
+            padding: [dp(20), 0]
             canvas.before:
                 Color:
                     rgba: 0.043, 0.071, 0.094, 1
@@ -24,6 +27,7 @@
                     size: self.size
             Label:
                 text: 'Scan Document'
+                font_size: '18sp'
                 bold: True
                 halign: 'left'
                 text_size: self.size
@@ -31,19 +35,23 @@
             Label:
                 text: root.page_info
                 size_hint_x: None
-                width: dp(80)
-                font_size: '12sp'
-                color: 0.7, 0.7, 0.7, 1
+                width: dp(100)
+                font_size: '13sp'
+                color: TEXT_MUTED
+                halign: 'right'
+                text_size: self.size
+                valign: 'middle'
 
+        # ── Body ────────────────────────────────────────────
         BoxLayout:
             orientation: 'horizontal'
             size_hint_y: 1
-            padding: dp(8)
-            spacing: dp(12)
+            padding: dp(12)
+            spacing: dp(16)
 
-            # Left side: PREVIEW LIST
+            # Left: page thumbnail list (wider on 800px)
             BoxLayout:
-                size_hint_x: 0.65
+                size_hint_x: 0.72
                 orientation: 'vertical'
                 padding: dp(2)
                 canvas.before:
@@ -52,30 +60,30 @@
                     RoundedRectangle:
                         pos: self.pos
                         size: self.size
-                        radius: [6]
+                        radius: [8]
 
                 ScrollView:
                     do_scroll_x: False
                     do_scroll_y: True
                     bar_width: dp(4)
-                    
+
                     GridLayout:
                         id: thumbnail_grid
                         cols: 1
-                        spacing: dp(10)
-                        padding: dp(10)
+                        spacing: dp(12)
+                        padding: dp(12)
                         size_hint_y: None
                         height: max(dp(80), self.minimum_height)
 
-            # Right side: Control Buttons
+            # Right: action buttons (more comfortable width)
             BoxLayout:
-                size_hint_x: 0.35
+                size_hint_x: 0.28
                 orientation: 'vertical'
-                spacing: dp(10)
+                spacing: dp(12)
 
                 Button:
                     text: 'BACK'
-                    font_size: '11sp'
+                    font_size: '13sp'
                     size_hint_y: 0.8
                     background_color: (0, 0, 0, 0)
                     on_release: root.go_back()
@@ -85,12 +93,11 @@
                         RoundedRectangle:
                             pos: self.pos
                             size: self.size
-                            radius: [6]
+                            radius: [8]
 
-                # ADD PAGE
                 Button:
                     text: '+ PAGE'
-                    font_size: '11sp'
+                    font_size: '13sp'
                     size_hint_y: 1
                     background_color: (0, 0, 0, 0)
                     disabled: root.is_scanning
@@ -101,12 +108,11 @@
                         RoundedRectangle:
                             pos: self.pos
                             size: self.size
-                            radius: [6]
+                            radius: [8]
 
-                # DELETE PAGE
                 Button:
                     text: 'DEL'
-                    font_size: '11sp'
+                    font_size: '13sp'
                     size_hint_y: 1
                     background_color: (0, 0, 0, 0)
                     disabled: root.is_scanning or not root.scanned_images
@@ -117,12 +123,11 @@
                         RoundedRectangle:
                             pos: self.pos
                             size: self.size
-                            radius: [6]
+                            radius: [8]
 
-                # DONE / UPLOAD
                 Button:
                     text: 'DONE'
-                    font_size: '13sp'
+                    font_size: '15sp'
                     bold: True
                     size_hint_y: 1.8
                     background_color: (0, 0, 0, 0)
@@ -134,4 +139,4 @@
                         RoundedRectangle:
                             pos: self.pos
                             size: self.size
-                            radius: [6]
+                            radius: [8]
