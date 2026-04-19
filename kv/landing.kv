@@ -6,52 +6,41 @@
             pos: self.pos
             size: self.size
 
-    # Using a single BoxLayout ensures everything is centered relative to the 800px width
-    BoxLayout:
-        orientation: 'vertical'
-        size_hint: (1, 1)
-        padding: [dp(50), dp(40)]
-        spacing: dp(20)
+    FloatLayout:
+        # 1. THE LOGO - Forced to a large, visible size
+        Image:
+            source: 'assets/logo/whiteLogo.png'
+            size_hint: None, None
+            size: dp(280), dp(280) # Explicitly large
+            pos_hint: {'center_x': 0.5, 'center_y': 0.65}
+            allow_stretch: True
+            keep_ratio: True
 
-        # 1. BRANDING GROUP
-        BoxLayout:
-            orientation: 'vertical'
-            size_hint_y: 0.6
-            spacing: dp(10)
-            
-            Image:
-                source: 'assets/logo/whiteLogo.png'
-                size_hint: (1, 1)
-                allow_stretch: True
-                keep_ratio: True
+        # 2. THE BRAND NAME
+        Label:
+            text: 'WizPrinter'
+            font_size: '60sp'
+            bold: True
+            color: [1, 1, 1, 1]
+            size_hint: None, None
+            size: self.texture_size
+            pos_hint: {'center_x': 0.5, 'center_y': 0.42}
 
-            Label:
-                text: 'WizPrinter'
-                font_size: '56sp' # Scaled up for 800x480
-                bold: True
-                color: [1, 1, 1, 1]
-                size_hint_y: None
-                height: self.texture_size[1]
-
-        # 2. THE BUTTON
-        AnchorLayout:
-            size_hint_y: 0.4
-            anchor_x: 'center'
-            anchor_y: 'center'
-            
-            Button:
-                text: 'TAP TO START'
-                size_hint: (0.7, None) # Uses 70% of the 800px width
-                height: dp(80)
-                font_size: '26sp'
-                bold: True
-                color: [1, 1, 1, 1]
-                background_color: [0, 0, 0, 0]
-                on_release: root.on_tap_start()
-                canvas.before:
-                    Color:
-                        rgba: PRIMARY_COLOR
-                    RoundedRectangle:
-                        pos: self.pos
-                        size: self.size
-                        radius: [16]
+        # 3. THE BUTTON - Wide and tall for 800px width
+        Button:
+            text: 'TAP TO START'
+            size_hint: None, None
+            size: dp(500), dp(90) # Explicitly wide/tall for the kiosk
+            pos_hint: {'center_x': 0.5, 'y': 0.12}
+            font_size: '32sp'
+            bold: True
+            color: [1, 1, 1, 1]
+            background_color: [0, 0, 0, 0]
+            on_release: root.on_tap_start()
+            canvas.before:
+                Color:
+                    rgba: PRIMARY # Your brand blue/green
+                RoundedRectangle:
+                    pos: self.pos
+                    size: self.size
+                    radius: [15]
