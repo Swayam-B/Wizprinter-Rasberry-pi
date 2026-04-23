@@ -300,13 +300,30 @@ class PreviewScreen(Screen):
         def do_download():
             try:
                 api.download_graded_pdf(graded_url, dest)
-                Clock.schedule_once(lambda dt: self._send_to_printer(dest), 0)
+                # Clock.schedule_once(lambda dt: self._send_to_printer(dest), 0)
+                Clock.schedule_once(lambda dt: self._preview_graded_pdf(dest), 0) # ERASE LATER
             except Exception as e:
                 Clock.schedule_once(
                     lambda dt, err=e: self._on_grade_error(err), 0
                 )
 
         threading.Thread(target=do_download, daemon=True).start()
+
+    # ERASE ENTIRE FUNCTION LATER
+    def _preview_graded_pdf(self, pdf_path):
+        """Temporary test logic to see the result instead of printing"""
+        self.success_message = "Rendering Test Preview..."
+        self.scanned_pdf_path = pdf_path
+        
+        render_dir = os.path.abspath(os.path.join("temp", "exam_render"))
+        pngs = pdf_to_png_paths(pdf_path, render_dir)
+        
+        container = self.ids.preview_container
+        container.clear_widgets()
+        n = self._populate_image_paths(container, pngs)
+        
+        self.page_info = f"TEST PREVIEW · {n} pg"
+        self.show_success = False
 
     def _send_to_printer(self, pdf_path):
         self.success_message = "Printing..."
