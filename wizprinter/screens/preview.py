@@ -124,11 +124,13 @@ class PreviewScreen(Screen):
             abs_path = os.path.abspath(path)
             img = KivyImage(
                 source=abs_path,
-                size_hint_y=None,
-                height=container.width * 1.41,
+                # size_hint_y=None,
+                # height=container.width * 1.41,
+                size_hint=(1, None), # NEW
                 allow_stretch=True,
                 keep_ratio=True,
             )
+            img.bind(width=lambda ins, val: setattr(ins, 'height', val * 1.41)) # NEW
             img.reload()
             container.add_widget(img)
             n += 1
