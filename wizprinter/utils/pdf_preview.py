@@ -9,7 +9,7 @@ def pdf_to_png_paths(
     pdf_path: str,
     out_dir: str,
     max_pages: int = 15,
-    zoom: float = 1.35,
+    zoom: float = 2.5,
 ) -> list:
     """Return absolute paths to PNGs (one per page), newest render only."""
     os.makedirs(out_dir, exist_ok=True)
