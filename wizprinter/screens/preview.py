@@ -130,7 +130,7 @@ class PreviewScreen(Screen):
                 allow_stretch=True,
                 keep_ratio=True,
             )
-            img.bind(width=lambda ins, val: setattr(ins, 'height', val * 1.41)) # NEW
+            img.bind(width=lambda ins, val: setattr(ins, 'height', val * 1.29)) # NEW
             img.reload()
             container.add_widget(img)
             n += 1
