@@ -84,11 +84,11 @@ class ScanScreen(Screen):
             abs_path = os.path.abspath(img_path)
             img_widget = KivyImage(
                 source=abs_path,
-                size_hint_y=None,
-                height=grid.width * 1.41,
+                size_hint=(1, None),
                 allow_stretch=True,
-                keep_ratio=True
+                keep_ratio=True,
             )
+            img_widget.bind(width=lambda ins, val: setattr(ins, 'height', val * 1.41))
             img_widget.reload()
             grid.add_widget(img_widget)
         
@@ -187,7 +187,12 @@ class ScanScreen(Screen):
                 return
             images = [PILImage.open(f).convert("RGB") for f in paths]
             if images:
-                images[0].save(pdf_path, save_all=True, append_images=images[1:])
+                images[0].save(
+                    pdf_path,
+                    save_all=True,
+                    append_images=images[1:],
+                    resolution=150
+                )
                 self.scanned_images = []
 
                 app = App.get_running_app()
