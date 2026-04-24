@@ -88,7 +88,7 @@ class ScanScreen(Screen):
                 allow_stretch=True,
                 keep_ratio=True,
             )
-            img_widget.bind(width=lambda ins, val: setattr(ins, 'height', val * 1.41))
+            img_widget.bind(width=lambda ins, val: setattr(ins, 'height', val * 1.294))
             img_widget.reload()
             grid.add_widget(img_widget)
         
