@@ -126,8 +126,7 @@ class PreviewScreen(Screen):
                 source=abs_path,
                 # size_hint_y=None,
                 # height=container.width * 1.41,
-                size_hint=(None, None), # NEW
-                width=container.width,  # NEW
+                size_hint=(1, None), # NEW
                 allow_stretch=True,
                 keep_ratio=True,
             )
@@ -315,6 +314,7 @@ class PreviewScreen(Screen):
     # ERASE ENTIRE FUNCTION LATER
     def _preview_graded_pdf(self, pdf_path):
         """Temporary test logic to see the result instead of printing"""
+        self.show_success = False
         self.success_message = "Rendering Test Preview..."
         self.scanned_pdf_path = pdf_path
         
@@ -326,7 +326,7 @@ class PreviewScreen(Screen):
         n = self._populate_image_paths(container, pngs)
         
         self.page_info = f"TEST PREVIEW · {n} pg"
-        self.show_success = False
+        Clock.schedule_once(lambda dt: setattr(self, "show_success", False), 0.1)
 
     def _send_to_printer(self, pdf_path):
         self.success_message = "Printing..."
