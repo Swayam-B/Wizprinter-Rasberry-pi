@@ -303,8 +303,8 @@ class PreviewScreen(Screen):
         def do_download():
             try:
                 api.download_graded_pdf(graded_url, dest)
-                # Clock.schedule_once(lambda dt: self._send_to_printer(dest), 0)
-                Clock.schedule_once(lambda dt: self._preview_graded_pdf(dest), 0) # ERASE LATER
+                Clock.schedule_once(lambda dt: self._send_to_printer(dest), 0)
+                Clock.schedule_once(lambda dt: self._preview_graded_pdf(dest), 0)
             except Exception as e:
                 Clock.schedule_once(
                     lambda dt, err=e: self._on_grade_error(err), 0
