@@ -126,7 +126,8 @@ class PreviewScreen(Screen):
                 source=abs_path,
                 # size_hint_y=None,
                 # height=container.width * 1.41,
-                size_hint=(1, None), # NEW
+                size_hint=(None, None), # NEW
+                width=container.width,  # NEW
                 allow_stretch=True,
                 keep_ratio=True,
             )
