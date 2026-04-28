@@ -1,5 +1,3 @@
-#:import dp kivy.metrics.dp
-
 <DashboardScreen>:
     canvas.before:
         Color:
@@ -31,13 +29,12 @@
             BoxLayout:
                 size_hint_x: 0.4
                 spacing: dp(8)
-                Label:
-                    text: '[P]'
-                    font_size: '18sp'
-                    bold: True
-                    color: PRIMARY_COLOR
+                
+                # Spacer to make room for the floating logo
+                Widget:
                     size_hint_x: None
-                    width: dp(30)
+                    width: dp(35)
+
                 Label:
                     text: 'WizPrinter'
                     font_size: '16sp'
@@ -47,7 +44,7 @@
                     valign: 'middle'
                     text_size: self.size
 
-            # Right: status
+            # Right: status (READY / TIME)
             BoxLayout:
                 size_hint_x: 0.6
                 spacing: dp(8)
@@ -81,60 +78,21 @@
                     valign: 'middle'
                     text_size: self.size
 
-        # 2x2 Grid Area - Now fills all remaining space
-        GridLayout:
-            cols: 2
+        # Main Dashboard Area
+        BoxLayout:
+            orientation: 'horizontal'
             padding: dp(16)
             spacing: dp(16)
             size_hint_y: 1
 
-            # GRADE
+            # LEFT COLUMN: GRADE
             Button:
                 text: 'GRADE'
                 font_size: '22sp'
                 bold: True
                 color: PRIMARY_COLOR
                 background_color: 0, 0, 0, 0
-                on_release: root.nav_grade()
-                canvas.before:
-                    Color:
-                        rgba: BG_CARD
-                    RoundedRectangle:
-                        pos: self.pos
-                        size: self.size
-                        radius: [12]
-                    Color:
-                        rgba: 0.3, 0.35, 0.45, 1
-                    Line:
-                        rounded_rectangle: [self.x, self.y, self.width, self.height, 12]
-
-            # SCAN
-            Button:
-                text: 'SCAN'
-                font_size: '22sp'
-                bold: True
-                color: PRIMARY_COLOR
-                background_color: 0, 0, 0, 0
-                on_release: root.nav_scan()
-                canvas.before:
-                    Color:
-                        rgba: BG_CARD
-                    RoundedRectangle:
-                        pos: self.pos
-                        size: self.size
-                        radius: [12]
-                    Color:
-                        rgba: 0.3, 0.35, 0.45, 1
-                    Line:
-                        rounded_rectangle: [self.x, self.y, self.width, self.height, 12]
-
-            # CLASSES
-            Button:
-                text: 'CLASSES'
-                font_size: '22sp'
-                bold: True
-                color: PRIMARY_COLOR
-                background_color: 0, 0, 0, 0
+                size_hint_x: 0.5
                 on_release: root.nav_classes()
                 canvas.before:
                     Color:
@@ -148,24 +106,57 @@
                     Line:
                         rounded_rectangle: [self.x, self.y, self.width, self.height, 12]
 
-            # SETTINGS
-            Button:
-                text: 'SETTINGS'
-                font_size: '22sp'
-                bold: True
-                color: PRIMARY_COLOR
-                background_color: 0, 0, 0, 0
-                on_release: root.nav_settings()
-                canvas.before:
-                    Color:
-                        rgba: BG_CARD
-                    RoundedRectangle:
-                        pos: self.pos
-                        size: self.size
-                        radius: [12]
-                    Color:
-                        rgba: 0.3, 0.35, 0.45, 1
-                    Line:
-                        rounded_rectangle: [self.x, self.y, self.width, self.height, 12]
+            # RIGHT COLUMN: SCAN/SETTINGS
+            BoxLayout:
+                orientation: 'vertical'
+                spacing: dp(16)
+                size_hint_x: 0.5
 
-        # NOTE: BottomNav removed completely to expand the grid
+                Button:
+                    text: 'SCAN'
+                    font_size: '22sp'
+                    bold: True
+                    color: PRIMARY_COLOR
+                    background_color: 0, 0, 0, 0
+                    on_release: root.nav_scan()
+                    canvas.before:
+                        Color:
+                            rgba: BG_CARD
+                        RoundedRectangle:
+                            pos: self.pos
+                            size: self.size
+                            radius: [12]
+                        Color:
+                            rgba: 0.3, 0.35, 0.45, 1
+                        Line:
+                            rounded_rectangle: [self.x, self.y, self.width, self.height, 12]
+
+                Button:
+                    text: 'SETTINGS'
+                    font_size: '22sp'
+                    bold: True
+                    color: PRIMARY_COLOR
+                    background_color: 0, 0, 0, 0
+                    on_release: root.nav_settings()
+                    canvas.before:
+                        Color:
+                            rgba: BG_CARD
+                        RoundedRectangle:
+                            pos: self.pos
+                            size: self.size
+                            radius: [12]
+                        Color:
+                            rgba: 0.3, 0.35, 0.45, 1
+                        Line:
+                            rounded_rectangle: [self.x, self.y, self.width, self.height, 12]
+
+    # --- FLOATING LOGO LAYER ---
+    Image:
+        source: 'assets/logo/whiteLogo.png'
+        size_hint: (None, None)
+        # Scaled larger to handle uncropped transparency
+        size: dp(70), dp(70)
+        # Positioned at absolute top left, nudged to center with the header bar
+        pos: (dp(0), root.height - self.height + dp(10))
+        allow_stretch: True
+        keep_ratio: True

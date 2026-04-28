@@ -5,9 +5,9 @@
     doc_date: ''
     orientation: 'horizontal'
     size_hint_y: None
-    height: dp(50)  # Reduced from 60dp to fit more items
+    height: dp(50)
     padding: [dp(15), dp(5)]
-    spacing: dp(10)
+    spacing: dp(15)
     canvas.before:
         Color:
             rgba: (1, 1, 1, 0.05) if self.state == 'normal' else (0.075, 0.498, 0.925, 0.2)
@@ -19,12 +19,21 @@
         Line:
             points: [self.x, self.y, self.right, self.y]
 
-    # File Icon placeholder
-    Label:
-        text: '??'
-        font_size: '18sp'
+    # --- CANVAS FILE ICON (Fixes the "??") ---
+    Widget:
         size_hint_x: None
-        width: dp(30)
+        width: dp(24)
+        canvas:
+            Color:
+                rgba: (0.075, 0.498, 0.925, 1) # WizPrinter Blue
+            # Main file body
+            Line:
+                width: dp(1)
+                points: [self.x, self.y, self.x, self.top, self.right - dp(6), self.top, self.right, self.top - dp(6), self.right, self.y, self.x, self.y]
+            # Dog-ear corner fold
+            Line:
+                width: dp(1)
+                points: [self.right - dp(6), self.top, self.right - dp(6), self.top - dp(6), self.right, self.top - dp(6)]
 
     BoxLayout:
         orientation: 'vertical'
@@ -43,7 +52,6 @@
             halign: 'left'
             valign: 'top'
 
-    # Arrow indicating it can be clicked
     Label:
         text: '>'
         font_size: '16sp'
@@ -64,9 +72,11 @@
 
         StatusBar:
             size_hint_y: None
-            height: dp(40)
+            height: dp(45)
             title: 'Select Document'
             show_back: True
+            # Ensures back always goes to dashboard
+            on_back: app.root.current = 'dashboard'
 
         ScrollView:
             size_hint_y: 1
@@ -77,25 +87,22 @@
                 size_hint_y: None
                 height: self.minimum_height
                 
-                # Test Items (These would usually be added via Python)
+                # --- CONNECTED MOCK PDFs ---
                 DocumentItem:
-                    doc_name: 'Lecture_Notes_01.pdf'
-                    doc_date: 'Mar 08, 2026'
+                    doc_name: 'WizPrinterTest1.pdf'
+                    doc_date: 'Mar 10, 2026'
                     on_release: root.select_document(self.doc_name)
+                
                 DocumentItem:
-                    doc_name: 'Lab_Manual_v2.docx'
-                    doc_date: 'Mar 05, 2026'
+                    doc_name: 'oct24MultiplePage.pdf'
+                    doc_date: 'Oct 24, 2025'
                     on_release: root.select_document(self.doc_name)
+                
                 DocumentItem:
-                    doc_name: 'Homework_3_Draft.txt'
-                    doc_date: 'Feb 28, 2026'
-                    on_release: root.select_document(self.doc_name)
-                DocumentItem:
-                    doc_name: 'Project_Proposal.pdf'
-                    doc_date: 'Feb 15, 2026'
+                    doc_name: 'oct24MultiplePageAnswered.pdf'
+                    doc_date: 'Oct 24, 2025'
                     on_release: root.select_document(self.doc_name)
 
-        # Optional: A footer if you need one, otherwise this space is for the list
         BottomNav:
             active_tab: 'documents'
             size_hint_y: None

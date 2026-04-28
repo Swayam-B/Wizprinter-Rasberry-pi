@@ -17,9 +17,14 @@ class DocumentsScreen(Screen):
     ])
 
     def select_document(self, doc_name):
-        """Select a document and navigate to preview."""
-        # TODO: Pass selected document data to preview screen
-        App.get_running_app().navigate('preview')
+        # 1. Get the Preview Screen object from the ScreenManager
+        preview_screen = self.manager.get_screen('preview')
+        
+        # 2. Tell it which file to render
+        preview_screen.load_document(doc_name)
+        
+        # 3. Switch to the preview screen
+        self.manager.current = 'preview'
 
     def go_back(self):
         App.get_running_app().navigate('classes', direction='right')

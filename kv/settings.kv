@@ -14,7 +14,9 @@
             size_hint_y: None
             height: dp(45)
             title: 'System Settings'
-            show_back: True
+            show_back: False
+            hide_home: False
+            on_back: app.root.current = 'dashboard'
 
         # Button stack
         BoxLayout:
