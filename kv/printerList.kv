@@ -1,0 +1,262 @@
+#:import _C wizprinter.screens.printer_list._C
+
+<PrinterCard>:
+    orientation: 'horizontal'
+    padding: dp(12), dp(10)
+    spacing: dp(12)
+    size_hint_y: None
+    height: dp(72)
+
+    canvas.before:
+        Color:
+            rgba: 0.098, 0.149, 0.200, 1
+        RoundedRectangle:
+            pos: self.pos
+            size: self.size
+            radius: [dp(8)]
+        Color:
+            rgba: 0.196, 0.302, 0.404, 1
+        Line:
+            rounded_rectangle: (self.x, self.y, self.width, self.height, dp(8))
+            width: 1
+
+    # ── Printer icon ──────────────────────────────────────
+    BoxLayout:
+        size_hint: None, None
+        size: dp(42), dp(42)
+        pos_hint: {'center_y': 0.5}
+        canvas.before:
+            Color:
+                rgba: 0.063, 0.098, 0.133, 1
+            RoundedRectangle:
+                pos: self.pos
+                size: self.size
+                radius: [dp(8)]
+        # Minimal printer glyph drawn with canvas
+        Widget:
+            canvas:
+                Color:
+                    rgba: 0.075, 0.498, 0.925, 1
+                # Printer body
+                RoundedRectangle:
+                    pos: self.center_x - dp(10), self.center_y - dp(5)
+                    size: dp(20), dp(13)
+                    radius: [dp(2)]
+                # Paper tray top
+                Rectangle:
+                    pos: self.center_x - dp(7), self.center_y + dp(8)
+                    size: dp(14), dp(5)
+                # Paper output
+                Rectangle:
+                    pos: self.center_x - dp(7), self.center_y - dp(12)
+                    size: dp(14), dp(6)
+
+    # ── Text content ─────────────────────────────────────
+    BoxLayout:
+        orientation: 'vertical'
+        spacing: dp(2)
+
+        Label:
+            text: root.printer_name
+            color: 1, 1, 1, 1
+            font_size: '13sp'
+            bold: True
+            text_size: self.size
+            halign: 'left'
+            valign: 'middle'
+
+        BoxLayout:
+            orientation: 'horizontal'
+            spacing: dp(6)
+            size_hint_y: None
+            height: dp(18)
+
+            Label:
+                text: root.status
+                color: root.status_color
+                font_size: '10sp'
+                bold: True
+                size_hint_x: None
+                width: self.texture_size[0] + dp(4)
+                halign: 'left'
+                valign: 'middle'
+                text_size: self.size
+
+            Label:
+                text: '•  ' + root.subtext
+                color: 0.573, 0.678, 0.788, 1
+                font_size: '10sp'
+                text_size: self.size
+                halign: 'left'
+                valign: 'middle'
+
+    # ── Connect button ────────────────────────────────────
+    Button:
+        text: "CONNECT"
+        size_hint: None, None
+        size: dp(90), dp(38)
+        pos_hint: {'center_y': 0.5}
+        font_size: '11sp'
+        bold: True
+        background_normal: ''
+        background_color: (0.137, 0.267, 0.388, 1) if root.is_ready else (0, 0, 0, 0)
+        color: (1, 1, 1, 1) if root.is_ready else (0.075, 0.498, 0.925, 1)
+        on_release:
+            app.root.get_screen('printer_list').select_printer(root.printer_name)
+        canvas.before:
+            Color:
+                rgba: (0.075, 0.498, 0.925, 1) if not root.is_ready else (0, 0, 0, 0)
+            Line:
+                width: 1
+                rounded_rectangle: (self.x, self.y, self.width, self.height, dp(8))
+
+
+<PrinterListScreen>:
+    canvas.before:
+        Color:
+            rgba: 0.063, 0.098, 0.133, 1
+        Rectangle:
+            pos: self.pos
+            size: self.size
+
+    BoxLayout:
+        orientation: 'vertical'
+
+        # ── Header bar ───────────────────────────────────
+        BoxLayout:
+            size_hint_y: None
+            height: dp(45)
+            padding: [dp(0), 0]
+            canvas.before:
+                Color:
+                    rgba: 0.039, 0.063, 0.094, 1
+                Rectangle:
+                    pos: self.pos
+                    size: self.size
+                Color:
+                    rgba: 0.196, 0.302, 0.404, 0.5
+                Line:
+                    points: [self.x, self.y, self.right, self.y]
+
+            # Back / chevron button
+            Button:
+                size_hint: None, 1
+                width: dp(50)
+                background_color: 0, 0, 0, 0
+                on_release: root.go_back()
+                canvas.after:
+                    Color:
+                        rgba: 0.075, 0.498, 0.925, 1
+                    Line:
+                        width: dp(1.5)
+                        points: [self.center_x + dp(5), self.center_y - dp(7), self.center_x - dp(4), self.center_y, self.center_x + dp(5), self.center_y + dp(7)]
+
+            Label:
+                text: "CONNECT PRINTER"
+                color: 0.075, 0.498, 0.925, 1
+                bold: True
+                font_size: '13sp'
+                halign: 'left'
+                valign: 'middle'
+                text_size: self.size
+
+            # WiFi icon area (right side)
+            BoxLayout:
+                size_hint_x: None
+                width: dp(50)
+                canvas.after:
+                    Color:
+                        rgba: 0.075, 0.498, 0.925, 1
+                    # WiFi arcs (simplified)
+                    Line:
+                        width: dp(1.5)
+                        ellipse: (self.center_x - dp(12), self.center_y - dp(8), dp(24), dp(24), 30, 150)
+                    Line:
+                        width: dp(1.5)
+                        ellipse: (self.center_x - dp(7), self.center_y - dp(3), dp(14), dp(14), 30, 150)
+                    # Dot
+                    Ellipse:
+                        pos: self.center_x - dp(2), self.center_y - dp(2)
+                        size: dp(4), dp(4)
+
+        # ── Printer list ─────────────────────────────────
+        ScrollView:
+            do_scroll_x: False
+            do_scroll_y: True
+            bar_width: dp(3)
+
+            BoxLayout:
+                id: printer_container
+                orientation: 'vertical'
+                padding: dp(12)
+                spacing: dp(10)
+                size_hint_y: None
+                height: self.minimum_height
+
+        # ── Footer: scan status + refresh ────────────────
+        BoxLayout:
+            size_hint_y: None
+            height: dp(32)
+            padding: [dp(14), 0]
+
+            Label:
+                text: root.scan_status
+                color: 0.573, 0.678, 0.788, 1
+                font_size: '10sp'
+                halign: 'left'
+                valign: 'middle'
+                text_size: self.size
+
+            Button:
+                text: "↺  REFRESH"
+                background_color: 0, 0, 0, 0
+                color: 0.075, 0.498, 0.925, 1
+                font_size: '10sp'
+                bold: True
+                size_hint_x: None
+                width: dp(80)
+                on_release: root.refresh_printer_list()
+
+        # ── Bottom navigation bar ─────────────────────────
+        BoxLayout:
+            size_hint_y: None
+            height: dp(50)
+            canvas.before:
+                Color:
+                    rgba: 0.039, 0.063, 0.094, 1
+                Rectangle:
+                    pos: self.pos
+                    size: self.size
+                Color:
+                    rgba: 0.196, 0.302, 0.404, 0.5
+                Line:
+                    points: [self.x, self.top, self.right, self.top]
+
+            Button:
+                text: "PRINT"
+                background_color: 0, 0, 0, 0
+                color: 0.075, 0.498, 0.925, 1
+                font_size: '11sp'
+                bold: True
+                on_release: app.navigate('dashboard')
+
+            Button:
+                text: "FILES"
+                background_color: 0, 0, 0, 0
+                color: 0.4, 0.4, 0.4, 1
+                font_size: '11sp'
+                on_release: app.navigate('documents')
+
+            Button:
+                text: "STATUS"
+                background_color: 0, 0, 0, 0
+                color: 0.4, 0.4, 0.4, 1
+                font_size: '11sp'
+                on_release: app.navigate('settings')
+
+            Button:
+                text: "SETTINGS"
+                background_color: 0, 0, 0, 0
+                color: 0.4, 0.4, 0.4, 1
+                font_size: '11sp'
+                on_release: app.navigate('settings')

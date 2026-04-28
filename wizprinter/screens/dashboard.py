@@ -3,7 +3,7 @@
 from kivy.uix.screenmanager import Screen
 from kivy.app import App
 from kivy.clock import Clock
-from kivy.properties import StringProperty
+from kivy.properties import StringProperty, BooleanProperty, ObjectProperty
 from datetime import datetime
 
 
@@ -11,6 +11,8 @@ class DashboardScreen(Screen):
     """Home dashboard with Grade (→ classes), Scan, and Settings."""
 
     current_time = StringProperty('12:45 PM')
+    printer_connected = BooleanProperty(False)
+    connected_printer_name = StringProperty('')
 
     def on_enter(self):
         self._update_time()
