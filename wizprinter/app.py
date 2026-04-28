@@ -14,6 +14,7 @@ from wizprinter.screens.landing import LandingScreen
 from wizprinter.screens.wifi import WifiScreen
 from wizprinter.screens.login import LoginScreen
 from wizprinter.screens.dashboard import DashboardScreen
+from wizprinter.screens.printer_list import PrinterListScreen
 from wizprinter.screens.classes import ClassesScreen
 from wizprinter.screens.documents import DocumentsScreen
 from wizprinter.screens.preview import PreviewScreen
@@ -48,6 +49,7 @@ class WizPrinterApp(App):
             'wifi.kv',
             'login.kv',
             'dashboard.kv',
+            'printerList.kv',
             'classes.kv',
             'documents.kv',
             'preview.kv',
@@ -75,6 +77,7 @@ class WizPrinterApp(App):
             sm.add_widget(WifiScreen(name='wifi'))
             sm.add_widget(LoginScreen(name='login'))
             sm.add_widget(DashboardScreen(name='dashboard'))
+            sm.add_widget(PrinterListScreen(name='printer_list'))
             sm.add_widget(ClassesScreen(name='classes'))
             sm.add_widget(DocumentsScreen(name='documents'))
             sm.add_widget(PreviewScreen(name='preview'))
@@ -85,10 +88,15 @@ class WizPrinterApp(App):
             print(f"CRASH during widget addition: {e}")
             raise e
 
+        self.selected_printer = None
+        self._printer_list_origin = 'scan'
+
         return sm
 
     def navigate(self, screen_name, direction='left'):
         """Navigate to a screen with transition direction."""
+        if screen_name == 'printer_list' and origin:
+            self._printer_list_origin = origin
         self.root.transition = FadeTransition(duration=0.15)
         self.root.current = screen_name
 

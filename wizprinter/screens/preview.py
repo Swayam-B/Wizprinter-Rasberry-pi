@@ -1,6 +1,4 @@
 import os
-import time
-import fitz
 import subprocess
 from kivy.uix.screenmanager import Screen
 from kivy.app import App
@@ -31,9 +29,13 @@ class PreviewScreen(Screen):
                 img = KivyImage(
                     source=path,
                     size_hint_y=None,
-                    height=container.width * 1.41, 
+                    height=container.width * 1.41 if container.width > 0 else 200,
                     allow_stretch=True,
                     keep_ratio=True
+                )
+                # Keep aspect ratio correct as the container resizes
+                img.bind(
+                    width=lambda widget, w: setattr(widget, 'height', w * 1.41)
                 )
                 img.reload()
                 container.add_widget(img)
@@ -61,8 +63,12 @@ class PreviewScreen(Screen):
         # Execute the Linux print command (lp)
         try:
             if os.path.exists(print_pdf_path):
-                # 'lp' sends the file to the default system printer
-                subprocess.run(['lp', print_pdf_path], check=True)
+                app = App.get_running_app()
+                printer_name = getattr(app, 'selected_printer', None)
+                cmd = ['lp', print_pdf_path]
+                if printer_name:
+                    cmd = ['lp', '-d', printer_name, print_pdf_path]
+                subprocess.run(cmd, check=True)
                 print(f"SENT TO PRINTER: {print_pdf_path}")
             else:
                 self.success_message = "ERROR: PDF NOT FOUND"
@@ -75,7 +81,36 @@ class PreviewScreen(Screen):
         Clock.schedule_once(self._finish, 3.0)
 
     def print_document(self):
-        self._show_completion('Print Sent!')
+        app = App.get_running_app()
+        printer_name = getattr(app, 'selected_printer', None)
+        
+        temp_dir = 'temp'
+        files = sorted([
+            os.path.join(temp_dir, f)
+            for f in os.listdir(temp_dir) if f.endswith('.jpg')
+        ]) if os.path.exists(temp_dir) else []
+
+        if not files:
+            self._show_completion('No pages to print')
+            return
+
+        try:
+            import cups
+            conn = cups.Connection()
+            dest = printer_name or conn.getDefault()
+            if not dest:
+                self._show_completion('No printer selected')
+                return
+            # Build a quick PDF from the temp JPGs
+            from PIL import Image as PILImage
+            images = [PILImage.open(f).convert('RGB') for f in files]
+            pdf_path = os.path.join('assets', 'mocks', 'pdf', 'print_job.pdf')
+            images[0].save(pdf_path, save_all=True, append_images=images[1:])
+            conn.printFile(dest, pdf_path, "WizPrinter_Job", {})
+            self._show_completion('Print Sent!')
+        except Exception as e:
+            print(f"Print error: {e}")
+            self._show_completion('Print Error')
 
     def _show_completion(self, message):
         self.success_message = message

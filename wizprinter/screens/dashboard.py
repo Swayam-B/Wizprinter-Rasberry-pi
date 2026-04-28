@@ -3,7 +3,7 @@
 from kivy.uix.screenmanager import Screen
 from kivy.app import App
 from kivy.clock import Clock
-from kivy.properties import StringProperty
+from kivy.properties import StringProperty, BooleanProperty, ObjectProperty
 from datetime import datetime
 
 
@@ -11,6 +11,8 @@ class DashboardScreen(Screen):
     """Home dashboard with Grade, Scan, Classes, Settings buttons."""
 
     current_time = StringProperty('12:45 PM')
+    printer_connected = BooleanProperty(False)
+    connected_printer_name = StringProperty('')
 
     def on_enter(self):
         self._update_time()
@@ -23,11 +25,20 @@ class DashboardScreen(Screen):
     def _update_time(self):
         self.current_time = datetime.now().strftime('%I:%M %p')
 
+    def set_printer(self, printer_name):
+        """Called by PrinterListScreen when a printer is selected."""
+        self.connected_printer_name = printer_name
+        self.printer_connected = bool(printer_name)
+
     def nav_grade(self):
-        App.get_running_app().navigate('grade')
+        app = App.get_running_app()
+        app._printer_list_origin = 'grade'
+        app.navigate('printer_list')
 
     def nav_scan(self):
-        App.get_running_app().navigate('scan')
+        app = App.get_running_app()
+        app._printer_list_origin = 'scan'
+        app.navigate('printer_list')
 
     def nav_classes(self):
         App.get_running_app().navigate('classes')

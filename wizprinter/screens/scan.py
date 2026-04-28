@@ -61,9 +61,13 @@ class ScanScreen(Screen):
                 source=img_path,
                 size_hint_y=None,
                 # Maintain A4/Letter aspect ratio for the thumbnail
-                height=grid.width * 1.41,
+                height=grid.width * 1.41 if grid.width > 0 else 200,
                 allow_stretch=True,
                 keep_ratio=True
+            )
+
+            img_widget.bind(
+                width=lambda widget, w: setattr(widget, 'height', w * 1.41)
             )
             # Ensure Kivy doesn't show a cached version of the file
             img_widget.reload()
@@ -161,8 +165,12 @@ class ScanScreen(Screen):
                 # Load the images into preview BEFORE navigating
                 preview_screen.load_document('latest_scan.pdf')
         
-                # Navigate using your app's helper
-                app.navigate('preview')
+        
+                classes_screen = app.root.get_screen('classes')
+                if not classes_screen.selected_class:
+                    app.navigate('classes')
+                else:
+                    app.navigate('preview')
                 
         except Exception as e:
             self.status_msg = "PDF ERROR"
