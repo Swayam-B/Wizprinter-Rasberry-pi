@@ -163,11 +163,14 @@ class PrinterListScreen(Screen):
         # Also store it on the app for any screen that needs it
         app.selected_printer = printer_name
 
-        # Continue to the screen that triggered us
+        # Continue to the screen that triggered us, preserving navigation_mode
+        classes_screen = app.root.get_screen('classes')
         if self.origin == 'scan':
-            app.navigate('scan')
+            classes_screen.navigation_mode = 'scan_flow'
+            app.navigate('classes')
         else:
             # 'grade' flow → classes → documents → preview
+            classes_screen.navigation_mode = 'grading'
             app.navigate('classes')
 
     def go_back(self):

@@ -90,7 +90,7 @@ class WizPrinterApp(App):
 
         return sm
 
-    def navigate(self, screen_name, direction='left'):
+    def navigate(self, screen_name, direction='left', origin=None):
         """Navigate to a screen with transition direction."""
         if screen_name == 'printer_list' and origin:
             self._printer_list_origin = origin

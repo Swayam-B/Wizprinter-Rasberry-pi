@@ -330,7 +330,8 @@ class PreviewScreen(Screen):
 
     def _send_to_printer(self, pdf_path):
         self.success_message = "Printing..."
-        success = self.printer.print_document(pdf_path)
+        printer_name = getattr(App.get_running_app(), 'selected_printer', None)
+        success = self.printer.print_document(pdf_path, printer_name=printer_name)
         
         if success:
             self.success_message = "Grading complete! Printed."
@@ -355,8 +356,9 @@ class PreviewScreen(Screen):
         if not pdf_path or not os.path.exists(pdf_path):
             print("Print attempted but path is invalid.")
             return
-        
-        success = self.printer.print_document(pdf_path)
+
+        printer_name = getattr(App.get_running_app(), 'selected_printer', None)
+        success = self.printer.print_document(pdf_path, printer_name=printer_name)
         
         if success:
             self.success_message = "Sent to OfficeJet!"

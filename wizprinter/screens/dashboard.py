@@ -25,15 +25,20 @@ class DashboardScreen(Screen):
     def _update_time(self):
         self.current_time = datetime.now().strftime('%I:%M %p')
 
+    def set_printer(self, printer_name):
+        """Called by PrinterListScreen when the user selects a printer."""
+        self.connected_printer_name = printer_name
+        self.printer_connected = bool(printer_name)
+
     def nav_scan(self):
-        classes_screen = App.get_running_app().root.get_screen('classes')
-        classes_screen.navigation_mode = 'scan_flow'
-        App.get_running_app().navigate('classes')
+        app = App.get_running_app()
+        app._printer_list_origin = 'scan'
+        app.navigate('printer_list')
 
     def nav_classes(self):
-        classes_screen = App.get_running_app().root.get_screen('classes')
-        classes_screen.navigation_mode = 'grading'
-        App.get_running_app().navigate('classes')
+        app = App.get_running_app()
+        app._printer_list_origin = 'grade'
+        app.navigate('printer_list')
 
     def nav_settings(self):
         App.get_running_app().navigate('settings')
