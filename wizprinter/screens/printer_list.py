@@ -53,34 +53,42 @@ class PrinterListScreen(Screen):
     # ── Discovery ──────────────────────────────────────────
 
     def _discover_printers(self):
-        """Find printers via CUPS (covers both USB and Wi-Fi/network)."""
+        """Find printers via CUPS, then probe each one to confirm it is
+        physically reachable before showing it in the list."""
         found = []
         try:
             import cups
             conn = cups.Connection()
             printers = conn.getPrinters()
             for name, attrs in printers.items():
-                state      = attrs.get('printer-state', 0)
-                state_msg  = attrs.get('printer-state-message', '')
-                uri        = attrs.get('device-uri', '')
-                jobs       = self._get_job_count(conn, name)
+                uri   = attrs.get('device-uri', '')
+                state = attrs.get('printer-state', 0)
 
-                is_ready = (state == 3)          # 3 = idle/ready in IPP
+                # ── Reachability probe ──────────────────────────────
+                # Skip any printer we cannot actually reach right now.
+                if not self._is_reachable(uri, attrs):
+                    print(f"[PrinterList] Skipping unreachable printer: {name} ({uri})")
+                    continue
+
+                state_msg = attrs.get('printer-state-message', '')
+                jobs      = self._get_job_count(conn, name)
+
+                is_ready = (state == 3)          # IPP: 3 = idle/ready
                 if is_ready:
                     status  = "READY"
                     subtext = self._friendly_uri(uri)
                     color   = _C['success']
-                elif state == 4:                 # 4 = processing
+                elif state == 4:                 # IPP: 4 = processing
                     status  = "PRINTING"
                     subtext = f"{jobs} job{'s' if jobs != 1 else ''} in queue"
                     color   = _C['warning']
-                elif state == 5:                 # 5 = stopped
+                elif state == 5:                 # IPP: 5 = stopped/error
                     status  = "STOPPED"
                     subtext = state_msg or "Check printer"
                     color   = (0.9, 0.3, 0.2, 1)
                 else:
                     status  = "UNKNOWN"
-                    subtext = uri
+                    subtext = self._friendly_uri(uri)
                     color   = _C['text_muted']
 
                 found.append({
@@ -93,8 +101,78 @@ class PrinterListScreen(Screen):
         except Exception as e:
             print(f"[PrinterList] CUPS discovery error: {e}")
 
-        # Schedule UI update back on the main thread
         Clock.schedule_once(lambda dt: self._on_discovery_done(found), 0)
+
+    @staticmethod
+    def _is_reachable(uri, attrs):
+        """Return True only if we can confirm the printer is physically present.
+
+        Strategy per URI scheme:
+          - ipp / ipps  → TCP connect to port 631 (or the URI port)
+          - socket      → TCP connect to the socket port (usually 9100)
+          - usb://      → check that the CUPS-reported state is not 'stopped'
+                          (USB devices only appear when plugged in)
+          - lpd / http  → TCP connect to port 515 / 80
+          - anything else → conservatively allow through
+        """
+        import socket as _socket
+
+        def tcp_ok(host, port, timeout=2.0):
+            try:
+                s = _socket.create_connection((host, port), timeout=timeout)
+                s.close()
+                return True
+            except OSError:
+                return False
+
+        try:
+            if uri.startswith(('ipp://', 'ipps://')):
+                # ipp://hostname[:port]/path
+                without_scheme = uri.split('://', 1)[1]
+                host_part = without_scheme.split('/')[0]
+                if ':' in host_part:
+                    host, port_str = host_part.rsplit(':', 1)
+                    port = int(port_str)
+                else:
+                    host = host_part
+                    port = 631
+                return tcp_ok(host, port)
+
+            elif uri.startswith('socket://'):
+                # socket://hostname[:port]
+                without_scheme = uri.split('://', 1)[1]
+                host_part = without_scheme.split('/')[0]
+                if ':' in host_part:
+                    host, port_str = host_part.rsplit(':', 1)
+                    port = int(port_str)
+                else:
+                    host = host_part
+                    port = 9100
+                return tcp_ok(host, port)
+
+            elif uri.startswith('lpd://'):
+                without_scheme = uri.split('://', 1)[1]
+                host = without_scheme.split('/')[0].split(':')[0]
+                return tcp_ok(host, 515)
+
+            elif uri.startswith('http://'):
+                without_scheme = uri.split('://', 1)[1]
+                host = without_scheme.split('/')[0].split(':')[0]
+                return tcp_ok(host, 80)
+
+            elif uri.startswith('usb://'):
+                # USB printers only appear in CUPS when physically connected.
+                # A stopped state means the device was unplugged or errored.
+                state = attrs.get('printer-state', 0)
+                return state != 5  # 5 = stopped → likely disconnected
+
+            else:
+                # Unknown scheme — allow through rather than hiding a real printer
+                return True
+
+        except Exception as e:
+            print(f"[PrinterList] Reachability probe error for {uri}: {e}")
+            return False
 
     def _get_job_count(self, conn, printer_name):
         try:
