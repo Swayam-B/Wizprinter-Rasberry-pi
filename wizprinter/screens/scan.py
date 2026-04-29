@@ -211,7 +211,7 @@ class ScanScreen(Screen):
                 self.status_msg = "NO VALID PAGES"
                 return
             for path in paths:
-                crop_white_bottom(path)
+                _crop_white_bottom(path)
             images = [PILImage.open(f).convert("RGB") for f in paths]
             if images:
                 images[0].save(
