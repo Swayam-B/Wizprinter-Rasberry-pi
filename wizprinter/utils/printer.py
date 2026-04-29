@@ -28,6 +28,7 @@ class PrinterManager:
         try:
             options = {
                 "media": "na_letter_8.5x11in",
+                "scaling": "100",
                 # "fit-to-page": "true",
             }
             job_id = self.conn.printFile(dest, file_path, "WizPrinter_Job", options)
