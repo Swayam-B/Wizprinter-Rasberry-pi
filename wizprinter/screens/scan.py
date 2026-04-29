@@ -10,6 +10,31 @@ from kivy.clock import Clock
 
 from wizprinter.utils.image_file import is_valid_jpeg
 
+def _crop_white_bottom(image_path, white_threshold=245, min_content_ratio=0.01):
+    try:
+        img = PILImage.open(image_path).convert("L")
+        width, height = img.size
+        pixels = img.load()
+
+        bottom = height
+
+        for y in range(height - 1, -1, -1):
+            non_white = 0
+            for x in range(width):
+                if pixels[x, y] < white_threshold:
+                    non_white += 1
+
+            if (non_white / width) > min_content_ratio:
+                bottom = y + 1
+                break
+
+        if bottom < height:
+            cropped = PILImage.open(image_path).crop((0, 0, width, bottom))
+            cropped.save(image_path, "JPEG", quality=95)
+
+    except Exception as e:
+        print(f"Crop Warning for {image_path}: {e}")
+
 class ScanScreen(Screen):
     """Handles multi-page hardware scanning and thumbnail previews."""
     
@@ -123,6 +148,7 @@ class ScanScreen(Screen):
             "--batch-start", str(len(self.scanned_images) + 1),
             "--mode", "Gray",
             "--resolution", "150",
+            "--page-height", "279",
         ]
 
         try:
@@ -185,6 +211,8 @@ class ScanScreen(Screen):
             if not paths:
                 self.status_msg = "NO VALID PAGES"
                 return
+            for path in paths:
+                crop_white_bottom(path)
             images = [PILImage.open(f).convert("RGB") for f in paths]
             if images:
                 images[0].save(
