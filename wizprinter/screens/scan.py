@@ -148,7 +148,6 @@ class ScanScreen(Screen):
             "--batch-start", str(len(self.scanned_images) + 1),
             "--mode", "Gray",
             "--resolution", "150",
-            "--page-height", "279",
         ]
 
         try:
