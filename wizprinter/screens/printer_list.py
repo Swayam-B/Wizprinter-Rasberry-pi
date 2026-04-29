@@ -76,7 +76,7 @@ class PrinterListScreen(Screen):
                 is_ready = (state == 3)          # IPP: 3 = idle/ready
                 if is_ready:
                     status  = "READY"
-                    subtext = self._friendly_uri(uri)
+                    subtext = self._connection_label(uri)
                     color   = _C['success']
                 elif state == 4:                 # IPP: 4 = processing
                     status  = "PRINTING"
@@ -88,7 +88,7 @@ class PrinterListScreen(Screen):
                     color   = (0.9, 0.3, 0.2, 1)
                 else:
                     status  = "UNKNOWN"
-                    subtext = self._friendly_uri(uri)
+                    subtext = self._connection_label(uri)
                     color   = _C['text_muted']
 
                 found.append({
@@ -105,17 +105,19 @@ class PrinterListScreen(Screen):
 
     @staticmethod
     def _is_reachable(uri, attrs):
-        """Return True only if we can confirm the printer is physically present.
+        """Return True only if we can confirm the printer is physically reachable.
 
-        Strategy per URI scheme:
-          - ipp / ipps  → TCP connect to port 631 (or the URI port)
-          - socket      → TCP connect to the socket port (usually 9100)
-          - usb://      → check that the CUPS-reported state is not 'stopped'
-                          (USB devices only appear when plugged in)
-          - lpd / http  → TCP connect to port 515 / 80
-          - anything else → conservatively allow through
+        Probe strategy per URI scheme:
+          ipp / ipps        → TCP port 631 (or URI port)
+          socket            → TCP port 9100
+          lpd               → TCP port 515
+          http / https      → TCP port 80 / 443
+          hp:/net / hpfax   → TCP port 9100 on embedded IP from query string
+          usb://            → CUPS state must not be stopped (5)
+          anything else     → conservatively DENY (unknown = untestable = skip)
         """
         import socket as _socket
+        import re as _re
 
         def tcp_ok(host, port, timeout=2.0):
             try:
@@ -125,9 +127,18 @@ class PrinterListScreen(Screen):
             except OSError:
                 return False
 
+        def extract_ip_from_hp_uri(u):
+            """hp:/net/Model?ip=x.x.x.x  or  hp:/net/Model?zc=hostname"""
+            m = _re.search(r'[?&]ip=([^&]+)', u)
+            if m:
+                return m.group(1).strip()
+            m = _re.search(r'[?&]zc=([^&]+)', u)
+            if m:
+                return m.group(1).strip()
+            return None
+
         try:
             if uri.startswith(('ipp://', 'ipps://')):
-                # ipp://hostname[:port]/path
                 without_scheme = uri.split('://', 1)[1]
                 host_part = without_scheme.split('/')[0]
                 if ':' in host_part:
@@ -139,40 +150,67 @@ class PrinterListScreen(Screen):
                 return tcp_ok(host, port)
 
             elif uri.startswith('socket://'):
-                # socket://hostname[:port]
                 without_scheme = uri.split('://', 1)[1]
                 host_part = without_scheme.split('/')[0]
-                if ':' in host_part:
-                    host, port_str = host_part.rsplit(':', 1)
-                    port = int(port_str)
-                else:
-                    host = host_part
-                    port = 9100
-                return tcp_ok(host, port)
+                host = host_part.rsplit(':', 1)[0] if ':' in host_part else host_part
+                port_str = host_part.rsplit(':', 1)[1] if ':' in host_part else '9100'
+                return tcp_ok(host, int(port_str))
 
             elif uri.startswith('lpd://'):
-                without_scheme = uri.split('://', 1)[1]
-                host = without_scheme.split('/')[0].split(':')[0]
+                host = uri.split('://', 1)[1].split('/')[0].split(':')[0]
                 return tcp_ok(host, 515)
 
             elif uri.startswith('http://'):
-                without_scheme = uri.split('://', 1)[1]
-                host = without_scheme.split('/')[0].split(':')[0]
+                host = uri.split('://', 1)[1].split('/')[0].split(':')[0]
                 return tcp_ok(host, 80)
 
+            elif uri.startswith('https://'):
+                host = uri.split('://', 1)[1].split('/')[0].split(':')[0]
+                return tcp_ok(host, 443)
+
+            elif uri.startswith(('hp:/net/', 'hpfax:/net/', 'hp:/usb/', 'hpfax:/usb/')):
+                if '/net/' in uri:
+                    # Network HPLIP: probe JetDirect port on the embedded IP
+                    ip = extract_ip_from_hp_uri(uri)
+                    if ip:
+                        return tcp_ok(ip, 9100)
+                    # No IP in URI — can't probe, deny
+                    return False
+                else:
+                    # USB HPLIP: treat like usb://
+                    state = attrs.get('printer-state', 0)
+                    return state != 5
+
             elif uri.startswith('usb://'):
-                # USB printers only appear in CUPS when physically connected.
-                # A stopped state means the device was unplugged or errored.
                 state = attrs.get('printer-state', 0)
-                return state != 5  # 5 = stopped → likely disconnected
+                return state != 5
 
             else:
-                # Unknown scheme — allow through rather than hiding a real printer
-                return True
+                # Unknown scheme — we have no way to probe it, so exclude it
+                # to avoid showing stale/phantom printers
+                print(f"[PrinterList] Unknown URI scheme, excluding: {uri}")
+                return False
 
         except Exception as e:
             print(f"[PrinterList] Reachability probe error for {uri}: {e}")
             return False
+
+    @staticmethod
+    def _connection_label(uri):
+        """Return a short, privacy-safe connection label — no IPs, no raw URIs."""
+        if uri.startswith(('ipp://', 'ipps://')):
+            return "Wi-Fi"
+        if uri.startswith(('hp:/net/', 'hpfax:/net/')):
+            return "Wi-Fi"
+        if uri.startswith('socket://'):
+            return "Network"
+        if uri.startswith('lpd://'):
+            return "Network"
+        if uri.startswith(('usb://', 'hp:/usb/', 'hpfax:/usb/')):
+            return "USB"
+        if uri.startswith(('http://', 'https://')):
+            return "Network"
+        return "Connected"
 
     def _get_job_count(self, conn, printer_name):
         try:
@@ -181,20 +219,6 @@ class PrinterListScreen(Screen):
                        if j.get('printer-uri', '').endswith(printer_name))
         except Exception:
             return 0
-
-    @staticmethod
-    def _friendly_uri(uri):
-        """Turn a device URI into a human-readable string."""
-        if uri.startswith('ipp://') or uri.startswith('ipps://'):
-            # ipp://192.168.1.x/... → IP: 192.168.1.x
-            host = uri.split('/')[2].split(':')[0]
-            return f"IP: {host}"
-        if uri.startswith('usb://'):
-            return "USB connected"
-        if uri.startswith('socket://'):
-            host = uri.split('/')[2].split(':')[0]
-            return f"Network: {host}"
-        return uri
 
     def _on_discovery_done(self, found):
         self.available_printers = found
