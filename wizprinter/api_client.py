@@ -230,13 +230,13 @@ def onboard_professor() -> dict:
         "post",
         f"{BASE_URL}/api/professors/onboard",
         headers=_headers(),
-        timeout=20,
+        timeout=200,
     ).json()
 
 
 def get_semesters() -> list:
     return _request_with_backoff(
-        "get", f"{BASE_URL}/api/semesters", headers=_headers(), timeout=10
+        "get", f"{BASE_URL}/api/semesters", headers=_headers(), timeout=100
     ).json()
 
 
@@ -246,7 +246,7 @@ def get_subjects(semester_id: str) -> list:
         f"{BASE_URL}/api/subjects",
         headers=_headers(),
         params={"semester_id": semester_id},
-        timeout=10,
+        timeout=100,
     ).json()
 
 
@@ -255,7 +255,7 @@ def get_classes(subject_id: str) -> list:
         "get",
         f"{BASE_URL}/api/classes/by-subject/{subject_id}",
         headers=_headers(),
-        timeout=10,
+        timeout=100,
     ).json()
 
 
@@ -264,7 +264,7 @@ def get_exams(subject_id: str) -> list:
         "get",
         f"{BASE_URL}/api/exams/by-subject/{subject_id}",
         headers=_headers(),
-        timeout=10,
+        timeout=100,
     ).json()
 
 
@@ -273,7 +273,7 @@ def get_exam(exam_id: str) -> dict:
         "get",
         f"{BASE_URL}/api/exams/{exam_id}",
         headers=_headers(),
-        timeout=15,
+        timeout=150,
     ).json()
 
 
@@ -324,7 +324,7 @@ def get_batch_status(batch_id: str) -> dict:
         "get",
         f"{BASE_URL}/api/batches/{batch_id}",
         headers=_headers(),
-        timeout=10,
+        timeout=100,
     ).json()
 
 
@@ -335,7 +335,7 @@ def get_session_status(session_id: str) -> dict:
         "get",
         f"{BASE_URL}/api/sessions/{session_id}",
         headers=_headers(),
-        timeout=10,
+        timeout=100,
     ).json()
 
 
@@ -345,7 +345,7 @@ def download_graded_pdf(url: str, dest_path: str):
     parent = os.path.dirname(dest_abs)
     if parent:
         os.makedirs(parent, exist_ok=True)
-    resp = _request_with_backoff("get", url, timeout=60)
+    resp = _request_with_backoff("get", url, timeout=600)
     with open(dest_abs, "wb") as f:
         f.write(resp.content)
 
@@ -357,7 +357,7 @@ def check_for_update() -> dict:
         "get",
         f"{BASE_URL}/api/updates/latest",
         headers=_headers(),
-        timeout=10,
+        timeout=100,
     ).json()
 
 
@@ -368,7 +368,7 @@ def fetch_remote_config() -> dict:
         "get",
         f"{BASE_URL}/api/config",
         headers=_headers(),
-        timeout=10,
+        timeout=100,
     ).json()
 
 
