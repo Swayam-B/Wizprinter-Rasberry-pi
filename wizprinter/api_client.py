@@ -219,7 +219,7 @@ def firebase_sign_in(email: str, password: str) -> dict:
         "post",
         url,
         json={"email": email, "password": password, "returnSecureToken": True},
-        timeout=20,
+        timeout=300,
     )
     return resp.json()
 
@@ -309,7 +309,7 @@ def submit_grading_session(exam_id: str, class_id: str, pdf_path: str) -> dict:
                 headers=_headers(),
                 data={"class_id": class_id},
                 files={"file": (os.path.basename(safe_pdf), f, "application/pdf")},
-                timeout=60,
+                timeout=600,
             )
         resp.raise_for_status()
         return resp.json()
