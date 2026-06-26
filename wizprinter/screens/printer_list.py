@@ -1,13 +1,17 @@
-"""Printer discovery and selection screen."""
+"""Printer discovery and selection screen — with no-device state and recovery."""
 
 import threading
+
 from kivy.uix.screenmanager import Screen
 from kivy.app import App
 from kivy.properties import ListProperty, StringProperty, ColorProperty, BooleanProperty
 from kivy.uix.boxlayout import BoxLayout
+from kivy.uix.popup import Popup
+from kivy.uix.label import Label
+from kivy.uix.button import Button
 from kivy.clock import Clock
+from kivy.metrics import dp
 
-# ─── Color palette (matches theme.kv) ──────────────────────
 _C = {
     "background":        (0.063, 0.098, 0.133, 1),
     "surface_low":       (0.098, 0.149, 0.200, 1),
@@ -20,76 +24,108 @@ _C = {
     "text_muted":        (0.573, 0.678, 0.788, 1),
 }
 
+# How many times to auto-retry a failed job before surfacing an error popup
+PRINT_JOB_MAX_RETRIES = 3
+PRINT_JOB_RETRY_INTERVAL = 5.0   # seconds between retries
+
+
+def _show_error_popup(title: str, message: str, on_retry=None, on_dismiss=None):
+    content = BoxLayout(orientation="vertical", padding=dp(12), spacing=dp(8))
+    content.add_widget(Label(
+        text=message,
+        text_size=(dp(340), None),
+        halign="center",
+        valign="middle",
+        font_size="13sp",
+        color=(1, 0.9, 0.9, 1),
+    ))
+    btn_row = BoxLayout(orientation="horizontal", size_hint_y=None,
+                        height=dp(44), spacing=dp(8))
+    dismiss_btn = Button(text="OK", font_size="13sp")
+    btn_row.add_widget(dismiss_btn)
+    if on_retry:
+        retry_btn = Button(text="Retry", font_size="13sp",
+                           background_color=(0.08, 0.5, 0.9, 1))
+        btn_row.add_widget(retry_btn)
+    content.add_widget(btn_row)
+
+    popup = Popup(
+        title=title, content=content,
+        size_hint=(None, None), size=(dp(400), dp(210)),
+        auto_dismiss=True,
+    )
+    dismiss_btn.bind(on_release=lambda *a: (popup.dismiss(),
+                                            on_dismiss() if on_dismiss else None))
+    if on_retry:
+        retry_btn.bind(on_release=lambda *a: (popup.dismiss(), on_retry()))
+    popup.open()
+    return popup
+
 
 class PrinterCard(BoxLayout):
-    """Reusable row widget for a discovered printer."""
     printer_name  = StringProperty("")
     status        = StringProperty("")
     subtext       = StringProperty("")
     status_color  = ColorProperty((1, 1, 1, 1))
     is_ready      = BooleanProperty(False)
-    # Which flow triggered this screen: 'scan' or 'grade'
     origin        = StringProperty("scan")
 
 
 class PrinterListScreen(Screen):
-    """Discover USB/Wi-Fi printers and let the user pick one before continuing."""
+    available_printers  = ListProperty([])
+    scan_status         = StringProperty("SCANNING FOR LOCAL DEVICES...")
+    origin              = StringProperty("scan")
+    no_device_visible   = BooleanProperty(False)
 
-    available_printers = ListProperty([])
-    scan_status        = StringProperty("SCANNING FOR LOCAL DEVICES...")
-    # Stores which dashboard button brought us here: 'scan' or 'grade'
-    origin             = StringProperty("scan")
-
-    # ── Lifecycle ──────────────────────────────────────────
+    # ── Lifecycle ──────────────────────────────────────────────────────────────
 
     def on_enter(self):
-        self.origin = getattr(App.get_running_app(), '_printer_list_origin', 'scan')
+        self.origin = getattr(App.get_running_app(), "_printer_list_origin", "scan")
+        self._start_discovery()
+
+    def _start_discovery(self):
         self.scan_status = "SCANNING FOR LOCAL DEVICES..."
         self.available_printers = []
+        self.no_device_visible = False
         self._update_ui()
-        # Run discovery in a background thread so the UI stays responsive
         threading.Thread(target=self._discover_printers, daemon=True).start()
 
-    # ── Discovery ──────────────────────────────────────────
+    # ── Discovery ──────────────────────────────────────────────────────────────
 
     def _discover_printers(self):
-        """Find printers via CUPS, then probe each one to confirm it is
-        physically reachable before showing it in the list."""
         found = []
         try:
             import cups
             conn = cups.Connection()
             printers = conn.getPrinters()
             for name, attrs in printers.items():
-                uri   = attrs.get('device-uri', '')
-                state = attrs.get('printer-state', 0)
+                uri   = attrs.get("device-uri", "")
+                state = attrs.get("printer-state", 0)
 
-                # ── Reachability probe ──────────────────────────────
-                # Skip any printer we cannot actually reach right now.
                 if not self._is_reachable(uri, attrs):
                     print(f"[PrinterList] Skipping unreachable printer: {name} ({uri})")
                     continue
 
-                state_msg = attrs.get('printer-state-message', '')
+                state_msg = attrs.get("printer-state-message", "")
                 jobs      = self._get_job_count(conn, name)
 
-                is_ready = (state == 3)          # IPP: 3 = idle/ready
+                is_ready = (state == 3)
                 if is_ready:
                     status  = "READY"
                     subtext = self._connection_label(uri)
-                    color   = _C['success']
-                elif state == 4:                 # IPP: 4 = processing
+                    color   = _C["success"]
+                elif state == 4:
                     status  = "PRINTING"
                     subtext = f"{jobs} job{'s' if jobs != 1 else ''} in queue"
-                    color   = _C['warning']
-                elif state == 5:                 # IPP: 5 = stopped/error
+                    color   = _C["warning"]
+                elif state == 5:
                     status  = "STOPPED"
                     subtext = state_msg or "Check printer"
                     color   = (0.9, 0.3, 0.2, 1)
                 else:
                     status  = "UNKNOWN"
                     subtext = self._connection_label(uri)
-                    color   = _C['text_muted']
+                    color   = _C["text_muted"]
 
                 found.append({
                     "name":    name,
@@ -105,17 +141,6 @@ class PrinterListScreen(Screen):
 
     @staticmethod
     def _is_reachable(uri, attrs):
-        """Return True only if we can confirm the printer is physically reachable.
-
-        Probe strategy per URI scheme:
-          ipp / ipps        → TCP port 631 (or URI port)
-          socket            → TCP port 9100
-          lpd               → TCP port 515
-          http / https      → TCP port 80 / 443
-          hp:/net / hpfax   → TCP port 9100 on embedded IP from query string
-          usb://            → CUPS state must not be stopped (5)
-          anything else     → conservatively DENY (unknown = untestable = skip)
-        """
         import socket as _socket
         import re as _re
 
@@ -128,95 +153,66 @@ class PrinterListScreen(Screen):
                 return False
 
         def extract_ip_from_hp_uri(u):
-            """hp:/net/Model?ip=x.x.x.x  or  hp:/net/Model?zc=hostname"""
-            m = _re.search(r'[?&]ip=([^&]+)', u)
+            m = _re.search(r"[?&]ip=([^&]+)", u)
             if m:
                 return m.group(1).strip()
-            m = _re.search(r'[?&]zc=([^&]+)', u)
+            m = _re.search(r"[?&]zc=([^&]+)", u)
             if m:
                 return m.group(1).strip()
             return None
 
         try:
-            if uri.startswith(('ipp://', 'ipps://')):
-                without_scheme = uri.split('://', 1)[1]
-                host_part = without_scheme.split('/')[0]
-                if ':' in host_part:
-                    host, port_str = host_part.rsplit(':', 1)
-                    port = int(port_str)
-                else:
-                    host = host_part
-                    port = 631
-                return tcp_ok(host, port)
-
-            elif uri.startswith('socket://'):
-                without_scheme = uri.split('://', 1)[1]
-                host_part = without_scheme.split('/')[0]
-                host = host_part.rsplit(':', 1)[0] if ':' in host_part else host_part
-                port_str = host_part.rsplit(':', 1)[1] if ':' in host_part else '9100'
+            if uri.startswith(("ipp://", "ipps://")):
+                without_scheme = uri.split("://", 1)[1]
+                host_part = without_scheme.split("/")[0]
+                host, port = (host_part.rsplit(":", 1) if ":" in host_part
+                              else (host_part, "631"))
+                return tcp_ok(host, int(port))
+            elif uri.startswith("socket://"):
+                without_scheme = uri.split("://", 1)[1]
+                host_part = without_scheme.split("/")[0]
+                host = host_part.rsplit(":", 1)[0] if ":" in host_part else host_part
+                port_str = host_part.rsplit(":", 1)[1] if ":" in host_part else "9100"
                 return tcp_ok(host, int(port_str))
-
-            elif uri.startswith('lpd://'):
-                host = uri.split('://', 1)[1].split('/')[0].split(':')[0]
+            elif uri.startswith("lpd://"):
+                host = uri.split("://", 1)[1].split("/")[0].split(":")[0]
                 return tcp_ok(host, 515)
-
-            elif uri.startswith('http://'):
-                host = uri.split('://', 1)[1].split('/')[0].split(':')[0]
+            elif uri.startswith("http://"):
+                host = uri.split("://", 1)[1].split("/")[0].split(":")[0]
                 return tcp_ok(host, 80)
-
-            elif uri.startswith('https://'):
-                host = uri.split('://', 1)[1].split('/')[0].split(':')[0]
+            elif uri.startswith("https://"):
+                host = uri.split("://", 1)[1].split("/")[0].split(":")[0]
                 return tcp_ok(host, 443)
-
-            elif uri.startswith(('hp:/net/', 'hpfax:/net/', 'hp:/usb/', 'hpfax:/usb/')):
-                if '/net/' in uri:
-                    # Network HPLIP: probe JetDirect port on the embedded IP
+            elif uri.startswith(("hp:/net/", "hpfax:/net/", "hp:/usb/", "hpfax:/usb/")):
+                if "/net/" in uri:
                     ip = extract_ip_from_hp_uri(uri)
-                    if ip:
-                        return tcp_ok(ip, 9100)
-                    # No IP in URI — can't probe, deny
-                    return False
+                    return tcp_ok(ip, 9100) if ip else False
                 else:
-                    # USB HPLIP: treat like usb://
-                    state = attrs.get('printer-state', 0)
-                    return state != 5
-
-            elif uri.startswith('usb://'):
-                state = attrs.get('printer-state', 0)
-                return state != 5
-
+                    return attrs.get("printer-state", 0) != 5
+            elif uri.startswith("usb://"):
+                return attrs.get("printer-state", 0) != 5
             else:
-                # Unknown scheme — we have no way to probe it, so exclude it
-                # to avoid showing stale/phantom printers
                 print(f"[PrinterList] Unknown URI scheme, excluding: {uri}")
                 return False
-
         except Exception as e:
             print(f"[PrinterList] Reachability probe error for {uri}: {e}")
             return False
 
     @staticmethod
     def _connection_label(uri):
-        """Return a short, privacy-safe connection label — no IPs, no raw URIs."""
-        if uri.startswith(('ipp://', 'ipps://')):
+        if uri.startswith(("ipp://", "ipps://", "hp:/net/", "hpfax:/net/")):
             return "Wi-Fi"
-        if uri.startswith(('hp:/net/', 'hpfax:/net/')):
-            return "Wi-Fi"
-        if uri.startswith('socket://'):
+        if uri.startswith(("socket://", "lpd://", "http://", "https://")):
             return "Network"
-        if uri.startswith('lpd://'):
-            return "Network"
-        if uri.startswith(('usb://', 'hp:/usb/', 'hpfax:/usb/')):
+        if uri.startswith(("usb://", "hp:/usb/", "hpfax:/usb/")):
             return "USB"
-        if uri.startswith(('http://', 'https://')):
-            return "Network"
         return "Connected"
 
     def _get_job_count(self, conn, printer_name):
         try:
-            jobs = conn.getJobs(which_jobs='not-completed', my_jobs=False)
+            jobs = conn.getJobs(which_jobs="not-completed", my_jobs=False)
             return sum(1 for j in jobs.values()
-                       if j.get('printer-uri', '').endswith(printer_name))
+                       if j.get("printer-uri", "").endswith(printer_name))
         except Exception:
             return 0
 
@@ -224,56 +220,103 @@ class PrinterListScreen(Screen):
         self.available_printers = found
         if found:
             self.scan_status = f"FOUND {len(found)} DEVICE{'S' if len(found) != 1 else ''}"
+            self.no_device_visible = False
         else:
             self.scan_status = "NO DEVICES FOUND"
+            self.no_device_visible = True
         self._update_ui()
 
-    # ── UI helpers ─────────────────────────────────────────
+    # ── UI helpers ─────────────────────────────────────────────────────────────
 
     def _update_ui(self):
-        if 'printer_container' not in self.ids:
+        if "printer_container" not in self.ids:
             return
         container = self.ids.printer_container
         container.clear_widgets()
         for p in self.available_printers:
             card = PrinterCard(
-                printer_name = p['name'],
-                status       = p['status'],
-                subtext      = p['subtext'],
-                status_color = p['color'],
-                is_ready     = p['ready'],
+                printer_name = p["name"],
+                status       = p["status"],
+                subtext      = p["subtext"],
+                status_color = p["color"],
+                is_ready     = p["ready"],
                 origin       = self.origin,
             )
             container.add_widget(card)
 
     def refresh_printer_list(self):
-        self.scan_status = "SCANNING FOR LOCAL DEVICES..."
-        self.available_printers = []
-        self._update_ui()
-        threading.Thread(target=self._discover_printers, daemon=True).start()
+        self._start_discovery()
 
-    # ── Navigation ─────────────────────────────────────────
+    # ── Navigation ─────────────────────────────────────────────────────────────
 
     def select_printer(self, printer_name):
-        """Connect to the chosen printer and continue the intended flow."""
         app = App.get_running_app()
-
-        # Tell the dashboard a printer is now connected
-        dashboard = app.root.get_screen('dashboard')
+        dashboard = app.root.get_screen("dashboard")
         dashboard.set_printer(printer_name)
-
-        # Also store it on the app for any screen that needs it
         app.selected_printer = printer_name
 
-        # Continue to the screen that triggered us, preserving navigation_mode
-        classes_screen = app.root.get_screen('classes')
-        if self.origin == 'scan':
-            classes_screen.navigation_mode = 'scan_flow'
-            app.navigate('classes')
+        classes_screen = app.root.get_screen("classes")
+        if self.origin == "scan":
+            classes_screen.navigation_mode = "scan_flow"
         else:
-            # 'grade' flow → classes → documents → preview
-            classes_screen.navigation_mode = 'grading'
-            app.navigate('classes')
+            classes_screen.navigation_mode = "grading"
+        app.navigate("classes")
 
     def go_back(self):
-        App.get_running_app().navigate('dashboard', direction='right')
+        App.get_running_app().navigate("dashboard", direction="right")
+
+    # ── Print job retry handling ────────────────────────────────────────────────
+
+    def send_with_retry(self, pdf_path: str, printer_name: str,
+                        attempt: int = 0, on_done=None):
+        """
+        Submit a print job to CUPS with automatic retry on transient failures.
+        Pops an error popup after PRINT_JOB_MAX_RETRIES failed attempts.
+        on_done(success: bool) is called on the Kivy thread when finished.
+        """
+        def bg():
+            try:
+                import cups
+                conn = cups.Connection()
+                options = {"media": "na_letter_8.5x11in", "scaling": "100"}
+                job_id = conn.printFile(printer_name, pdf_path,
+                                        "WizPrinter_Job", options)
+                Clock.schedule_once(
+                    lambda dt: self._on_job_sent(job_id, printer_name,
+                                                 pdf_path, attempt, on_done), 0
+                )
+            except Exception as e:
+                Clock.schedule_once(
+                    lambda dt, err=e: self._on_job_error(
+                        err, pdf_path, printer_name, attempt, on_done
+                    ), 0
+                )
+
+        threading.Thread(target=bg, daemon=True).start()
+
+    def _on_job_sent(self, job_id, printer_name, pdf_path, attempt, on_done):
+        print(f"[PrinterList] Job {job_id} queued on {printer_name}")
+        if on_done:
+            on_done(True)
+
+    def _on_job_error(self, exc, pdf_path, printer_name, attempt, on_done):
+        print(f"[PrinterList] Print job attempt {attempt+1} failed: {exc}")
+        if attempt < PRINT_JOB_MAX_RETRIES - 1:
+            # Schedule a retry
+            Clock.schedule_once(
+                lambda dt: self.send_with_retry(
+                    pdf_path, printer_name, attempt + 1, on_done
+                ),
+                PRINT_JOB_RETRY_INTERVAL,
+            )
+        else:
+            # All retries exhausted — show error popup with option to retry manually
+            def manual_retry():
+                self.send_with_retry(pdf_path, printer_name, 0, on_done)
+
+            _show_error_popup(
+                "Print Failed",
+                f"Could not print after {PRINT_JOB_MAX_RETRIES} attempts.\n{exc}",
+                on_retry=manual_retry,
+                on_dismiss=lambda: on_done(False) if on_done else None,
+            )

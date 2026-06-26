@@ -6,161 +6,236 @@
             pos: self.pos
             size: self.size
 
-    BoxLayout:
-        orientation: 'vertical'
+    # ── Password prompt overlay ──────────────────────────────────────────────
+    FloatLayout:
 
-        # Header
+        # Main content
         BoxLayout:
-            size_hint_y: None
-            height: '32dp'
-            padding: ['12dp', '4dp']
-            spacing: '8dp'
-            canvas.before:
-                Color:
-                    rgba: BG_DARK
-                Rectangle:
-                    pos: self.pos
-                    size: self.size
-            Label:
-                text: 'WiFi'
-                font_size: '14sp'
-                bold: True
-                color: PRIMARY_COLOR
-                size_hint_x: None
-                width: '24dp'
-            Label:
-                text: 'SELECT NETWORK'
-                font_size: '12sp'
-                bold: True
-                color: 0.075, 0.498, 0.925, 0.8
-                text_size: self.size
-                halign: 'left'
-                valign: 'middle'
+            orientation: 'vertical'
+            size: root.size
+            pos: root.pos
 
-        # Network list area (40%)
-        ScrollView:
-            size_hint_y: 0.4
+            # Header
             BoxLayout:
-                orientation: 'vertical'
                 size_hint_y: None
-                height: self.minimum_height
-
-                # Selected network
-                Button:
-                    size_hint_y: None
-                    height: '44dp'
-                    background_color: TRANSPARENT
-                    on_release: root.select_network('WizPrinter_Guest')
-                    canvas.before:
-                        Color:
-                            rgba: 0.075, 0.498, 0.925, 0.2
-                        Rectangle:
-                            pos: self.pos
-                            size: self.size
-                        Color:
-                            rgba: PRIMARY_COLOR
-                        Rectangle:
-                            pos: self.pos
-                            size: 4, self.height
-                    Label:
-                        text: 'WizPrinter_Guest'
-                        font_size: '14sp'
-                        bold: True
-                        color: WHITE
-                        center: self.parent.center
-
-                # Other networks
-                Button:
-                    size_hint_y: None
-                    height: '44dp'
-                    background_color: TRANSPARENT
-                    on_release: root.select_network('Office_WiFi')
-                    canvas.before:
-                        Color:
-                            rgba: 1, 1, 1, 0.03
-                        Line:
-                            points: [self.x, self.y, self.right, self.y]
-                    Label:
-                        text: 'Office_WiFi'
-                        font_size: '14sp'
-                        color: WHITE
-                        center: self.parent.center
-
-                Button:
-                    size_hint_y: None
-                    height: '44dp'
-                    background_color: TRANSPARENT
-                    on_release: root.select_network('Public_Net')
-                    canvas.before:
-                        Color:
-                            rgba: 1, 1, 1, 0.03
-                        Line:
-                            points: [self.x, self.y, self.right, self.y]
-                    Label:
-                        text: 'Public_Net'
-                        font_size: '14sp'
-                        color: WHITE
-                        center: self.parent.center
-
-        # Keyboard placeholder area (60%)
-        BoxLayout:
-            size_hint_y: 0.6
-            padding: '16dp'
-            canvas.before:
-                Color:
-                    rgba: 0.086, 0.114, 0.149, 1
-                Rectangle:
-                    pos: self.pos
-                    size: self.size
-
-            BoxLayout:
-                orientation: 'vertical'
+                height: '38dp'
+                padding: ['12dp', '4dp']
                 spacing: '8dp'
-                padding: '16dp'
                 canvas.before:
                     Color:
-                        rgba: BORDER_COLOR
-                    Line:
-                        rectangle: self.x, self.y, self.width, self.height
-                        dash_length: 8
-                        dash_offset: 4
-
-                Widget:
-                    size_hint_y: 0.3
-
+                        rgba: BG_DARK
+                    Rectangle:
+                        pos: self.pos
+                        size: self.size
                 Label:
-                    text: 'RESERVED FOR VIRTUAL KEYBOARD'
+                    text: 'WiFi'
+                    font_size: '14sp'
+                    bold: True
+                    color: PRIMARY_COLOR
+                    size_hint_x: None
+                    width: '26dp'
+                Label:
+                    text: 'SELECT NETWORK'
                     font_size: '12sp'
                     bold: True
-                    color: 1, 1, 1, 0.8
-                    size_hint_y: 0.2
-
+                    color: 0.075, 0.498, 0.925, 0.8
+                    text_size: self.size
+                    halign: 'left'
+                    valign: 'middle'
                 Label:
-                    text: '60% Vertical Space (192px @ 1x)'
-                    font_size: '10sp'
-                    color: BORDER_COLOR
-                    size_hint_y: 0.15
+                    text: root.scan_status
+                    font_size: '11sp'
+                    color: (0.3, 1, 0.5, 1) if root.networks else (0.9, 0.6, 0.2, 1)
+                    text_size: self.size
+                    halign: 'right'
+                    valign: 'middle'
 
-                AnchorLayout:
-                    size_hint_y: 0.25
-                    Button:
-                        size_hint: None, None
-                        size: '160dp', '36dp'
-                        background_color: TRANSPARENT
-                        on_release: root.select_network('WizPrinter_Guest')
+            # Scan status / connecting message
+            Label:
+                text: root.connect_status
+                size_hint_y: None
+                height: '24dp' if root.connect_status else '0dp'
+                opacity: 1 if root.connect_status else 0
+                font_size: '12sp'
+                bold: True
+                color: (0.3, 1, 0.5, 1) if root.connect_status.startswith('\u2713') else (1, 0.45, 0.45, 1)
+                halign: 'center'
+
+            # Network list
+            ScrollView:
+                size_hint_y: 1
+                BoxLayout:
+                    orientation: 'vertical'
+                    size_hint_y: None
+                    height: self.minimum_height
+                    spacing: '1dp'
+
+                    # Spinner row while scanning
+                    BoxLayout:
+                        size_hint_y: None
+                        height: '44dp' if root.is_scanning else '0dp'
+                        opacity: 1 if root.is_scanning else 0
                         canvas.before:
                             Color:
-                                rgba: PRIMARY_COLOR
-                            RoundedRectangle:
+                                rgba: 0.098, 0.149, 0.200, 1
+                            Rectangle:
                                 pos: self.pos
                                 size: self.size
-                                radius: [18]
                         Label:
-                            text: 'TRIGGER KEYBOARD'
-                            font_size: '10sp'
-                            bold: True
-                            color: WHITE
-                            center: self.parent.center
+                            text: 'Scanning\u2026'
+                            font_size: '13sp'
+                            color: 0.573, 0.678, 0.788, 1
+                            halign: 'center'
 
-                Widget:
-                    size_hint_y: 0.1
+                    # No networks found
+                    BoxLayout:
+                        size_hint_y: None
+                        height: '60dp' if (not root.networks and not root.is_scanning) else '0dp'
+                        opacity: 1 if (not root.networks and not root.is_scanning) else 0
+                        orientation: 'vertical'
+                        padding: '16dp'
+                        Label:
+                            text: 'No networks found'
+                            font_size: '13sp'
+                            color: 1, 0.6, 0.3, 1
+                            halign: 'center'
+
+                    # Dynamic network rows
+                    BoxLayout:
+                        id: network_rows
+                        orientation: 'vertical'
+                        size_hint_y: None
+                        height: self.minimum_height
+
+            # Refresh button
+            BoxLayout:
+                size_hint_y: None
+                height: '50dp'
+                padding: '16dp', '6dp'
+                spacing: '8dp'
+
+                Button:
+                    text: 'REFRESH'
+                    font_size: '12sp'
+                    bold: True
+                    size_hint_x: 0.5
+                    disabled: root.is_scanning or root.is_connecting
+                    background_color: TRANSPARENT
+                    on_release: root.refresh()
+                    canvas.before:
+                        Color:
+                            rgba: (0.196, 0.302, 0.404, 1)
+                        RoundedRectangle:
+                            pos: self.pos
+                            size: self.size
+                            radius: [6]
+
+                Button:
+                    text: 'SKIP'
+                    font_size: '12sp'
+                    size_hint_x: 0.5
+                    background_color: TRANSPARENT
+                    on_release: app.navigate('login')
+                    canvas.before:
+                        Color:
+                            rgba: (0.12, 0.18, 0.25, 1)
+                        RoundedRectangle:
+                            pos: self.pos
+                            size: self.size
+                            radius: [6]
+
+        # ── Password prompt modal ──────────────────────────────────────────────
+        BoxLayout:
+            size_hint: None, None
+            size: '380dp', '220dp'
+            pos_hint: {'center_x': 0.5, 'center_y': 0.5}
+            opacity: 1 if root.show_password_prompt else 0
+            disabled: not root.show_password_prompt
+            orientation: 'vertical'
+            padding: '16dp'
+            spacing: '10dp'
+            canvas.before:
+                Color:
+                    rgba: 0.063, 0.098, 0.133, 0.97
+                RoundedRectangle:
+                    pos: self.pos
+                    size: self.size
+                    radius: [12]
+                Color:
+                    rgba: 0.075, 0.498, 0.925, 0.6
+                Line:
+                    rounded_rectangle: self.x, self.y, self.width, self.height, 12
+
+            Label:
+                text: 'Password for: ' + root.prompt_ssid
+                font_size: '13sp'
+                bold: True
+                color: 0.88, 0.89, 0.93, 1
+                size_hint_y: None
+                height: '26dp'
+                halign: 'center'
+                text_size: self.size
+
+            BoxLayout:
+                size_hint_y: None
+                height: '44dp'
+                spacing: '6dp'
+                canvas.before:
+                    Color:
+                        rgba: 0.12, 0.18, 0.25, 1
+                    RoundedRectangle:
+                        pos: self.pos
+                        size: self.size
+                        radius: [6]
+
+                TextInput:
+                    id: pwd_input
+                    hint_text: 'Network password'
+                    password: not root.password_visible
+                    multiline: False
+                    font_size: '13sp'
+                    background_color: TRANSPARENT
+                    foreground_color: 1, 1, 1, 1
+                    cursor_color: PRIMARY_COLOR
+                    padding: ['10dp', '10dp']
+
+                Button:
+                    text: 'Hide' if root.password_visible else 'Show'
+                    size_hint_x: None
+                    width: '54dp'
+                    font_size: '11sp'
+                    background_color: TRANSPARENT
+                    color: 0.573, 0.678, 0.788, 1
+                    on_release: root.toggle_password_visible()
+
+            BoxLayout:
+                size_hint_y: None
+                height: '40dp'
+                spacing: '8dp'
+
+                Button:
+                    text: 'Cancel'
+                    font_size: '12sp'
+                    background_color: TRANSPARENT
+                    on_release: root.cancel_password()
+                    canvas.before:
+                        Color:
+                            rgba: 0.196, 0.302, 0.404, 1
+                        RoundedRectangle:
+                            pos: self.pos
+                            size: self.size
+                            radius: [6]
+
+                Button:
+                    text: 'Connect'
+                    font_size: '12sp'
+                    bold: True
+                    background_color: TRANSPARENT
+                    on_release: root.confirm_password(pwd_input.text)
+                    canvas.before:
+                        Color:
+                            rgba: PRIMARY_COLOR
+                        RoundedRectangle:
+                            pos: self.pos
+                            size: self.size
+                            radius: [6]

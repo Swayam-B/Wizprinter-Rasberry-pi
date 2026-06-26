@@ -1,27 +1,260 @@
-"""System settings screen."""
+"""System settings screen — time/region, network config, logout."""
+
+import subprocess
+import threading
 
 from kivy.uix.screenmanager import Screen
+from kivy.uix.popup import Popup
+from kivy.uix.boxlayout import BoxLayout
+from kivy.uix.gridlayout import GridLayout
+from kivy.uix.label import Label
+from kivy.uix.button import Button
+from kivy.uix.spinner import Spinner
 from kivy.app import App
+from kivy.clock import Clock
+from kivy.metrics import dp
+from kivy.properties import StringProperty
 
+
+# ── Time/region data ──────────────────────────────────────────────────────────
+
+# Common IANA timezone identifiers grouped by region label
+TIMEZONES = [
+    # Americas
+    "America/New_York",
+    "America/Chicago",
+    "America/Denver",
+    "America/Los_Angeles",
+    "America/Anchorage",
+    "Pacific/Honolulu",
+    "America/Sao_Paulo",
+    "America/Mexico_City",
+    "America/Toronto",
+    "America/Vancouver",
+    # Europe / Africa
+    "Europe/London",
+    "Europe/Paris",
+    "Europe/Berlin",
+    "Europe/Rome",
+    "Europe/Madrid",
+    "Europe/Istanbul",
+    "Africa/Cairo",
+    "Africa/Johannesburg",
+    "Africa/Lagos",
+    # Asia / Pacific
+    "Asia/Dubai",
+    "Asia/Karachi",
+    "Asia/Kolkata",
+    "Asia/Dhaka",
+    "Asia/Bangkok",
+    "Asia/Singapore",
+    "Asia/Shanghai",
+    "Asia/Tokyo",
+    "Asia/Seoul",
+    "Australia/Sydney",
+    "Pacific/Auckland",
+]
+
+NTP_SERVERS = [
+    "pool.ntp.org",
+    "time.google.com",
+    "time.cloudflare.com",
+    "time.apple.com",
+]
+
+
+def _get_current_timezone() -> str:
+    """Read the system's current timezone string."""
+    try:
+        result = subprocess.run(
+            ["timedatectl", "show", "--property=Timezone", "--value"],
+            capture_output=True, text=True, timeout=5,
+        )
+        tz = result.stdout.strip()
+        return tz if tz else "UTC"
+    except Exception:
+        return "UTC"
+
+
+def _apply_timezone(tz: str) -> tuple[bool, str]:
+    """Set system timezone via timedatectl. Returns (success, message)."""
+    try:
+        result = subprocess.run(
+            ["sudo", "timedatectl", "set-timezone", tz],
+            capture_output=True, text=True, timeout=10,
+        )
+        if result.returncode == 0:
+            return True, f"Timezone set to {tz}"
+        return False, result.stderr.strip() or "Failed to set timezone."
+    except FileNotFoundError:
+        return False, "timedatectl not found."
+    except subprocess.TimeoutExpired:
+        return False, "Timed out setting timezone."
+    except Exception as e:
+        return False, str(e)
+
+
+def _sync_ntp(server: str) -> tuple[bool, str]:
+    """Force an immediate NTP sync via chronyc or ntpdate."""
+    # Try chronyc first (preferred on Pi), fall back to ntpdate
+    for tool, cmd in [
+        ("chronyc", ["sudo", "chronyc", "makestep"]),
+        ("ntpdate", ["sudo", "ntpdate", "-u", server]),
+    ]:
+        try:
+            result = subprocess.run(cmd, capture_output=True, text=True, timeout=20)
+            if result.returncode == 0:
+                return True, f"Time synced via {tool}"
+        except (FileNotFoundError, subprocess.TimeoutExpired):
+            continue
+        except Exception as e:
+            return False, str(e)
+    return False, "Could not sync time. Install chrony or ntp."
+
+
+# ── Popup helper ──────────────────────────────────────────────────────────────
+
+def _show_info_popup(title: str, message: str):
+    content = BoxLayout(orientation="vertical", padding=dp(12), spacing=dp(8))
+    content.add_widget(Label(
+        text=message,
+        text_size=(dp(320), None),
+        halign="center",
+        valign="middle",
+        font_size="13sp",
+    ))
+    btn = Button(text="OK", size_hint=(1, None), height=dp(44))
+    content.add_widget(btn)
+    popup = Popup(
+        title=title,
+        content=content,
+        size_hint=(None, None),
+        size=(dp(360), dp(200)),
+        auto_dismiss=True,
+    )
+    btn.bind(on_release=lambda *a: popup.dismiss())
+    popup.open()
+
+
+# ── Screen ────────────────────────────────────────────────────────────────────
 
 class SettingsScreen(Screen):
     """Settings: Time/Region, Network Config, Log Out."""
 
+    current_tz = StringProperty("")
+
+    def on_enter(self, *args):
+        self.current_tz = _get_current_timezone()
+
+    # ── Time / Region ──────────────────────────────────────────────────────────
+
     def open_time_region(self):
-        """Open time/region configuration."""
-        # TODO: Implement time/region settings
-        pass
+        """Open the time/region configuration popup."""
+        current = _get_current_timezone()
+
+        root = BoxLayout(orientation="vertical", padding=dp(12), spacing=dp(10))
+
+        root.add_widget(Label(
+            text=f"Current timezone: {current}",
+            size_hint_y=None, height=dp(28), font_size="12sp",
+            color=(0.7, 0.85, 1, 1),
+        ))
+
+        tz_spinner = Spinner(
+            text=current if current in TIMEZONES else TIMEZONES[0],
+            values=TIMEZONES,
+            size_hint_y=None,
+            height=dp(44),
+            font_size="13sp",
+        )
+        root.add_widget(tz_spinner)
+
+        ntp_label = Label(
+            text="NTP server:",
+            size_hint_y=None, height=dp(24), font_size="12sp", halign="left",
+        )
+        root.add_widget(ntp_label)
+
+        ntp_spinner = Spinner(
+            text=NTP_SERVERS[0],
+            values=NTP_SERVERS,
+            size_hint_y=None,
+            height=dp(40),
+            font_size="13sp",
+        )
+        root.add_widget(ntp_spinner)
+
+        status_lbl = Label(
+            text="",
+            size_hint_y=None, height=dp(28), font_size="12sp",
+            color=(0.4, 0.9, 0.5, 1),
+        )
+        root.add_widget(status_lbl)
+
+        btn_row = BoxLayout(orientation="horizontal", size_hint_y=None, height=dp(44), spacing=dp(8))
+
+        cancel_btn = Button(text="Cancel", font_size="13sp")
+        apply_btn = Button(text="Apply", font_size="13sp", background_color=(0.08, 0.5, 0.9, 1))
+
+        btn_row.add_widget(cancel_btn)
+        btn_row.add_widget(apply_btn)
+        root.add_widget(btn_row)
+
+        popup = Popup(
+            title="Time & Region",
+            content=root,
+            size_hint=(None, None),
+            size=(dp(420), dp(340)),
+            auto_dismiss=False,
+        )
+        cancel_btn.bind(on_release=lambda *a: popup.dismiss())
+
+        def do_apply(*a):
+            chosen_tz = tz_spinner.text
+            chosen_ntp = ntp_spinner.text
+            status_lbl.text = "Applying…"
+            status_lbl.color = (1, 0.9, 0.4, 1)
+            apply_btn.disabled = True
+
+            def bg():
+                ok_tz, msg_tz = _apply_timezone(chosen_tz)
+                ok_ntp, msg_ntp = _sync_ntp(chosen_ntp)
+                Clock.schedule_once(
+                    lambda dt: _on_done(ok_tz, msg_tz, ok_ntp, msg_ntp), 0
+                )
+
+            def _on_done(ok_tz, msg_tz, ok_ntp, msg_ntp):
+                apply_btn.disabled = False
+                if ok_tz and ok_ntp:
+                    status_lbl.text = "✓ Applied"
+                    status_lbl.color = (0.3, 1, 0.5, 1)
+                    self.current_tz = chosen_tz
+                    Clock.schedule_once(lambda dt: popup.dismiss(), 1.2)
+                else:
+                    msgs = []
+                    if not ok_tz:
+                        msgs.append(f"TZ: {msg_tz}")
+                    if not ok_ntp:
+                        msgs.append(f"NTP: {msg_ntp}")
+                    status_lbl.text = "\n".join(msgs)
+                    status_lbl.color = (1, 0.4, 0.4, 1)
+
+            threading.Thread(target=bg, daemon=True).start()
+
+        apply_btn.bind(on_release=do_apply)
+        popup.open()
+
+    # ── Network ───────────────────────────────────────────────────────────────
 
     def open_network_config(self):
-        """Open network configuration."""
-        App.get_running_app().navigate('wifi')
+        App.get_running_app().navigate("wifi")
+
+    # ── Logout ────────────────────────────────────────────────────────────────
 
     def logout(self):
-        """Log out and return to landing screen."""
         import wizprinter.api_client as api
-
         api.clear_session()
         App.get_running_app().navigate("landing", direction="left")
 
     def go_back(self):
-        App.get_running_app().navigate('dashboard', direction='left')
+        App.get_running_app().navigate("dashboard", direction="left")
