@@ -6,10 +6,9 @@
             pos: self.pos
             size: self.size
 
-    # ── Password prompt overlay ──────────────────────────────────────────────
     FloatLayout:
 
-        # Main content
+        # ── Main content ──────────────────────────────────────────────────────
         BoxLayout:
             orientation: 'vertical'
             size: root.size
@@ -18,8 +17,8 @@
             # Header
             BoxLayout:
                 size_hint_y: None
-                height: '38dp'
-                padding: ['12dp', '4dp']
+                height: '42dp'
+                padding: ['14dp', '4dp']
                 spacing: '8dp'
                 canvas.before:
                     Color:
@@ -28,17 +27,16 @@
                         pos: self.pos
                         size: self.size
                 Label:
-                    text: 'WiFi'
-                    font_size: '14sp'
-                    bold: True
-                    color: PRIMARY_COLOR
+                    text: '📶'
+                    font_size: '18sp'
                     size_hint_x: None
-                    width: '26dp'
+                    width: '28dp'
+                    halign: 'center'
                 Label:
                     text: 'SELECT NETWORK'
-                    font_size: '12sp'
+                    font_size: '13sp'
                     bold: True
-                    color: 0.075, 0.498, 0.925, 0.8
+                    color: PRIMARY_COLOR
                     text_size: self.size
                     halign: 'left'
                     valign: 'middle'
@@ -50,15 +48,15 @@
                     halign: 'right'
                     valign: 'middle'
 
-            # Scan status / connecting message
+            # Connect status bar
             Label:
                 text: root.connect_status
                 size_hint_y: None
-                height: '24dp' if root.connect_status else '0dp'
+                height: '26dp' if root.connect_status else '0dp'
                 opacity: 1 if root.connect_status else 0
-                font_size: '12sp'
+                font_size: '13sp'
                 bold: True
-                color: (0.3, 1, 0.5, 1) if root.connect_status.startswith('\u2713') else (1, 0.45, 0.45, 1)
+                color: (0.3, 1, 0.5, 1) if root.connect_status.startswith('\u2713') else (1, 0.4, 0.4, 1)
                 halign: 'center'
 
             # Network list
@@ -68,12 +66,12 @@
                     orientation: 'vertical'
                     size_hint_y: None
                     height: self.minimum_height
-                    spacing: '1dp'
+                    spacing: '2dp'
 
-                    # Spinner row while scanning
+                    # Scanning spinner row
                     BoxLayout:
                         size_hint_y: None
-                        height: '44dp' if root.is_scanning else '0dp'
+                        height: '48dp' if root.is_scanning else '0dp'
                         opacity: 1 if root.is_scanning else 0
                         canvas.before:
                             Color:
@@ -84,39 +82,39 @@
                         Label:
                             text: 'Scanning\u2026'
                             font_size: '13sp'
-                            color: 0.573, 0.678, 0.788, 1
+                            color: TEXT_MUTED
                             halign: 'center'
 
                     # No networks found
                     BoxLayout:
                         size_hint_y: None
-                        height: '60dp' if (not root.networks and not root.is_scanning) else '0dp'
+                        height: '64dp' if (not root.networks and not root.is_scanning) else '0dp'
                         opacity: 1 if (not root.networks and not root.is_scanning) else 0
                         orientation: 'vertical'
                         padding: '16dp'
                         Label:
-                            text: 'No networks found'
+                            text: 'No networks found.\nTap Refresh to scan again.'
                             font_size: '13sp'
                             color: 1, 0.6, 0.3, 1
                             halign: 'center'
 
-                    # Dynamic network rows
+                    # Dynamically populated network rows (from Python on_networks)
                     BoxLayout:
                         id: network_rows
                         orientation: 'vertical'
                         size_hint_y: None
                         height: self.minimum_height
 
-            # Refresh button
+            # Bottom buttons
             BoxLayout:
                 size_hint_y: None
-                height: '50dp'
-                padding: '16dp', '6dp'
-                spacing: '8dp'
+                height: '54dp'
+                padding: '14dp', '7dp'
+                spacing: '10dp'
 
                 Button:
-                    text: 'REFRESH'
-                    font_size: '12sp'
+                    text: '↺  REFRESH'
+                    font_size: '13sp'
                     bold: True
                     size_hint_x: 0.5
                     disabled: root.is_scanning or root.is_connecting
@@ -124,111 +122,129 @@
                     on_release: root.refresh()
                     canvas.before:
                         Color:
-                            rgba: (0.196, 0.302, 0.404, 1)
+                            rgba: (0.15, 0.22, 0.30, 1) if self.disabled else BORDER_COLOR
                         RoundedRectangle:
                             pos: self.pos
                             size: self.size
-                            radius: [6]
+                            radius: [8]
 
                 Button:
                     text: 'SKIP'
-                    font_size: '12sp'
+                    font_size: '13sp'
                     size_hint_x: 0.5
                     background_color: TRANSPARENT
                     on_release: app.navigate('login')
                     canvas.before:
                         Color:
-                            rgba: (0.12, 0.18, 0.25, 1)
+                            rgba: (0.10, 0.15, 0.20, 1)
                         RoundedRectangle:
                             pos: self.pos
                             size: self.size
-                            radius: [6]
+                            radius: [8]
 
-        # ── Password prompt modal ──────────────────────────────────────────────
+        # ── Password prompt modal ─────────────────────────────────────────────
+        # Uses the same TextInput style as login.kv for consistency
         BoxLayout:
             size_hint: None, None
-            size: '380dp', '220dp'
+            size: '400dp', '230dp'
             pos_hint: {'center_x': 0.5, 'center_y': 0.5}
             opacity: 1 if root.show_password_prompt else 0
             disabled: not root.show_password_prompt
             orientation: 'vertical'
-            padding: '16dp'
+            padding: '18dp'
             spacing: '10dp'
             canvas.before:
                 Color:
-                    rgba: 0.063, 0.098, 0.133, 0.97
+                    rgba: 0.055, 0.086, 0.118, 0.97
                 RoundedRectangle:
                     pos: self.pos
                     size: self.size
-                    radius: [12]
+                    radius: [14]
                 Color:
-                    rgba: 0.075, 0.498, 0.925, 0.6
+                    rgba: PRIMARY_COLOR
                 Line:
-                    rounded_rectangle: self.x, self.y, self.width, self.height, 12
+                    rounded_rectangle: [self.x, self.y, self.width, self.height, 14]
+                    width: 1.2
 
             Label:
-                text: 'Password for: ' + root.prompt_ssid
-                font_size: '13sp'
-                bold: True
-                color: 0.88, 0.89, 0.93, 1
+                text: 'Password for'
+                font_size: '11sp'
+                color: TEXT_MUTED
                 size_hint_y: None
-                height: '26dp'
+                height: '16dp'
+                halign: 'center'
+
+            Label:
+                text: root.prompt_ssid
+                font_size: '15sp'
+                bold: True
+                color: WHITE
+                size_hint_y: None
+                height: '22dp'
                 halign: 'center'
                 text_size: self.size
 
+            # Input row — matching login.kv styling exactly
             BoxLayout:
                 size_hint_y: None
                 height: '44dp'
-                spacing: '6dp'
+                spacing: '0dp'
                 canvas.before:
                     Color:
-                        rgba: 0.12, 0.18, 0.25, 1
+                        rgba: BG_SURFACE
                     RoundedRectangle:
                         pos: self.pos
                         size: self.size
-                        radius: [6]
+                        radius: [8]
+                    Color:
+                        rgba: (0.075, 0.498, 0.925, 0.6) if pwd_input.focus else BORDER_COLOR
+                    Line:
+                        rounded_rectangle: [self.x, self.y, self.width, self.height, 8]
+                        width: 1.2
 
                 TextInput:
                     id: pwd_input
                     hint_text: 'Network password'
                     password: not root.password_visible
                     multiline: False
-                    font_size: '13sp'
+                    font_size: '15sp'
                     background_color: TRANSPARENT
                     foreground_color: 1, 1, 1, 1
+                    hint_text_color: TEXT_MUTED
                     cursor_color: PRIMARY_COLOR
-                    padding: ['10dp', '10dp']
+                    padding: ['14dp', '10dp']
 
                 Button:
                     text: 'Hide' if root.password_visible else 'Show'
                     size_hint_x: None
-                    width: '54dp'
-                    font_size: '11sp'
+                    width: '60dp'
+                    font_size: '12sp'
+                    bold: True
                     background_color: TRANSPARENT
-                    color: 0.573, 0.678, 0.788, 1
+                    color: TEXT_MUTED
                     on_release: root.toggle_password_visible()
 
             BoxLayout:
                 size_hint_y: None
-                height: '40dp'
-                spacing: '8dp'
+                height: '42dp'
+                spacing: '10dp'
 
                 Button:
                     text: 'Cancel'
-                    font_size: '12sp'
+                    font_size: '13sp'
                     background_color: TRANSPARENT
                     on_release: root.cancel_password()
                     canvas.before:
                         Color:
-                            rgba: 0.196, 0.302, 0.404, 1
+                            rgba: BORDER_COLOR
                         RoundedRectangle:
                             pos: self.pos
                             size: self.size
-                            radius: [6]
+                            radius: [8]
 
                 Button:
                     text: 'Connect'
-                    font_size: '12sp'
+                    font_size: '13sp'
                     bold: True
                     background_color: TRANSPARENT
                     on_release: root.confirm_password(pwd_input.text)
@@ -238,4 +254,4 @@
                         RoundedRectangle:
                             pos: self.pos
                             size: self.size
-                            radius: [6]
+                            radius: [8]

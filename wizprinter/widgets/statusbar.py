@@ -1,23 +1,17 @@
-"""Reusable status bar widget for top of screens."""
+"""Reusable status bar widget — go_back() uses navigation history stack."""
 
-from kivy.uix.boxlayout import BoxLayout
-from kivy.properties import StringProperty, BooleanProperty, ObjectProperty
 from kivy.app import App
+from kivy.properties import BooleanProperty, ObjectProperty, StringProperty
+from kivy.uix.boxlayout import BoxLayout
+
 
 class StatusBar(BoxLayout):
-    """Top status bar with optional back button and title."""
-    title = StringProperty('WizPrinter')
+    title     = StringProperty('WizPrinter')
     hide_home = BooleanProperty(False)
     show_back = BooleanProperty(False)
     show_wifi = BooleanProperty(True)
-    
-    # ADD THIS LINE to fix the AttributeError
-    back = ObjectProperty(None)
+    back      = ObjectProperty(None)
 
     def go_back(self):
-        app = App.get_running_app()
-        # Explicitly check if we are on the login screen
-        if app.root.current == 'login':
-            app.root.current = 'landing'
-        else:
-            app.go_back()
+        """Always delegate to app.go_back() for consistent history-based navigation."""
+        App.get_running_app().go_back()

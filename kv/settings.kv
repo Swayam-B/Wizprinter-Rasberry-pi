@@ -9,7 +9,6 @@
     BoxLayout:
         orientation: 'vertical'
 
-        # Status bar
         StatusBar:
             size_hint_y: None
             height: dp(45)
@@ -17,19 +16,20 @@
             show_back: True
             on_back: root.go_back()
 
-        # Button stack
+        # ── Settings list ─────────────────────────────────────────────────────
         BoxLayout:
             orientation: 'vertical'
-            padding: ['24dp', '8dp']
-            spacing: '12dp'
+            padding: ['20dp', '10dp']
+            spacing: '10dp'
 
             Widget:
-                size_hint_y: 0.1
+                size_hint_y: None
+                height: '8dp'
 
-            # Time/Region button
+            # Time/Region
             Button:
                 size_hint_y: None
-                height: '54dp'
+                height: '58dp'
                 background_color: TRANSPARENT
                 on_release: root.open_time_region()
                 canvas.before:
@@ -44,43 +44,40 @@
                     spacing: '12dp'
                     pos: self.parent.pos
                     size: self.parent.size
-                    AnchorLayout:
+                    Label:
+                        text: '🕐'
+                        font_size: '22sp'
                         size_hint_x: None
                         width: '36dp'
-                        Widget:
-                            size_hint: None, None
-                            size: '32dp', '32dp'
-                            canvas:
-                                Color:
-                                    rgba: 1, 1, 1, 0.2
-                                RoundedRectangle:
-                                    pos: self.pos
-                                    size: self.size
-                                    radius: [8]
-                            Label:
-                                text: 'G'
-                                font_size: '14sp'
-                                color: WHITE
-                                center: self.parent.center
-                    Label:
-                        text: 'Change Time/Region'
-                        font_size: '16sp'
-                        bold: True
-                        color: WHITE
-                        text_size: self.size
-                        halign: 'left'
-                        valign: 'middle'
+                        halign: 'center'
+                    BoxLayout:
+                        orientation: 'vertical'
+                        Label:
+                            text: 'Time & Region'
+                            font_size: '16sp'
+                            bold: True
+                            color: WHITE
+                            text_size: self.size
+                            halign: 'left'
+                            valign: 'middle'
+                        Label:
+                            text: 'Current: ' + root.current_tz
+                            font_size: '11sp'
+                            color: 1, 1, 1, 0.7
+                            text_size: self.size
+                            halign: 'left'
+                            valign: 'middle'
                     Label:
                         size_hint_x: None
                         width: '24dp'
-                        text: '>'
-                        font_size: '18sp'
-                        color: 1, 1, 1, 0.5
+                        text: '›'
+                        font_size: '22sp'
+                        color: 1, 1, 1, 0.6
 
-            # Network Config button
+            # Network Config — navigates to WiFi, does NOT force re-login
             Button:
                 size_hint_y: None
-                height: '54dp'
+                height: '58dp'
                 background_color: TRANSPARENT
                 on_release: root.open_network_config()
                 canvas.before:
@@ -95,43 +92,53 @@
                     spacing: '12dp'
                     pos: self.parent.pos
                     size: self.parent.size
-                    AnchorLayout:
+                    Label:
+                        text: '📶'
+                        font_size: '22sp'
                         size_hint_x: None
                         width: '36dp'
-                        Widget:
-                            size_hint: None, None
-                            size: '32dp', '32dp'
-                            canvas:
-                                Color:
-                                    rgba: 1, 1, 1, 0.2
-                                RoundedRectangle:
-                                    pos: self.pos
-                                    size: self.size
-                                    radius: [8]
-                            Label:
-                                text: 'N'
-                                font_size: '14sp'
-                                color: WHITE
-                                center: self.parent.center
-                    Label:
-                        text: 'Network Config'
-                        font_size: '16sp'
-                        bold: True
-                        color: WHITE
-                        text_size: self.size
-                        halign: 'left'
-                        valign: 'middle'
+                        halign: 'center'
+                    BoxLayout:
+                        orientation: 'vertical'
+                        Label:
+                            text: 'Network Config'
+                            font_size: '16sp'
+                            bold: True
+                            color: WHITE
+                            text_size: self.size
+                            halign: 'left'
+                            valign: 'middle'
+                        Label:
+                            text: 'Change Wi-Fi — no sign-in required'
+                            font_size: '11sp'
+                            color: 1, 1, 1, 0.7
+                            text_size: self.size
+                            halign: 'left'
+                            valign: 'middle'
                     Label:
                         size_hint_x: None
                         width: '24dp'
-                        text: '>'
-                        font_size: '18sp'
-                        color: 1, 1, 1, 0.5
+                        text: '›'
+                        font_size: '22sp'
+                        color: 1, 1, 1, 0.6
 
-            # Log Out button
+            # Accessibility toggle row (high-contrast hint)
+            BoxLayout:
+                size_hint_y: None
+                height: '40dp'
+                padding: ['4dp', 0]
+                Label:
+                    text: 'Accessibility: set A11Y_HIGH_CONTRAST=1 or A11Y_TTS=1 in .env'
+                    font_size: '10sp'
+                    color: TEXT_MUTED
+                    text_size: self.size
+                    halign: 'left'
+                    valign: 'middle'
+
+            # Log Out
             Button:
                 size_hint_y: None
-                height: '54dp'
+                height: '58dp'
                 background_color: TRANSPARENT
                 on_release: root.logout()
                 canvas.before:
@@ -141,76 +148,57 @@
                         pos: self.pos
                         size: self.size
                         radius: [12]
+                    Color:
+                        rgba: DANGER_COLOR
+                    Line:
+                        rounded_rectangle: [self.x, self.y, self.width, self.height, 12]
+                        width: 1
                 BoxLayout:
                     padding: ['16dp', '0dp']
                     spacing: '12dp'
                     pos: self.parent.pos
                     size: self.parent.size
-                    AnchorLayout:
+                    Label:
+                        text: '⏻'
+                        font_size: '22sp'
+                        color: DANGER_COLOR
                         size_hint_x: None
                         width: '36dp'
-                        Widget:
-                            size_hint: None, None
-                            size: '32dp', '32dp'
-                            canvas:
-                                Color:
-                                    rgba: 0.906, 0.298, 0.235, 0.1
-                                RoundedRectangle:
-                                    pos: self.pos
-                                    size: self.size
-                                    radius: [8]
-                            Label:
-                                text: 'X'
-                                font_size: '14sp'
-                                bold: True
-                                color: DANGER_COLOR
-                                center: self.parent.center
+                        halign: 'center'
                     Label:
-                        text: 'LOG OUT'
+                        text: 'Log Out'
                         font_size: '16sp'
                         bold: True
-                        color: WHITE
-                        letter_spacing: 2
+                        color: DANGER_COLOR
                         text_size: self.size
                         halign: 'left'
                         valign: 'middle'
                     Label:
                         size_hint_x: None
                         width: '24dp'
-                        text: 'L'
-                        font_size: '14sp'
-                        color: 0.4, 0.4, 0.4, 1
+                        text: '›'
+                        font_size: '22sp'
+                        color: DANGER_COLOR
 
             Widget:
 
-        # Footer
+        # ── Footer ────────────────────────────────────────────────────────────
         BoxLayout:
             size_hint_y: None
-            height: '24dp'
-            padding: ['24dp', '0dp', '24dp', '8dp']
-            BoxLayout:
-                spacing: '8dp'
-                Widget:
-                    size_hint_x: None
-                    width: '8dp'
-                    canvas:
-                        Color:
-                            rgba: SUCCESS_COLOR
-                        Ellipse:
-                            pos: self.center_x - 4, self.center_y - 4
-                            size: 8, 8
-                Label:
-                    text: 'PRINTER READY'
-                    font_size: '8sp'
-                    bold: True
-                    color: 0.4, 0.4, 0.4, 1
-                    text_size: self.size
-                    halign: 'left'
-                    valign: 'middle'
-                    letter_spacing: 2
+            height: '28dp'
+            padding: ['20dp', '0dp', '20dp', '8dp']
             Label:
-                text: 'v2.4.0-build.82'
-                font_size: '8sp'
+                text: 'PRINTER READY'
+                font_size: '9sp'
+                bold: True
+                color: 0.4, 0.4, 0.4, 1
+                text_size: self.size
+                halign: 'left'
+                valign: 'middle'
+                letter_spacing: 1
+            Label:
+                text: 'v2.5.0'
+                font_size: '9sp'
                 color: 0.4, 0.4, 0.4, 1
                 text_size: self.size
                 halign: 'right'
