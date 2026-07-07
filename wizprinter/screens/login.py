@@ -18,6 +18,8 @@ class LoginScreen(Screen):
     password_visible = BooleanProperty(False)
     status_text      = StringProperty("")
     is_loading       = BooleanProperty(False)
+    email_focused    = BooleanProperty(False)
+    pwd_focused      = BooleanProperty(False)
 
     def on_enter(self, *args):
         a11y.speak("Login screen. Enter your email and password.")

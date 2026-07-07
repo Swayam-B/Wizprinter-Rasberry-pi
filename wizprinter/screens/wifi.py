@@ -94,6 +94,7 @@ class WifiScreen(Screen):
     show_password_prompt = BooleanProperty(False)
     prompt_ssid         = StringProperty("")
     password_visible    = BooleanProperty(False)
+    pwd_focused         = BooleanProperty(False)
 
     _pending_ssid:    str  = ""
     _pending_secured: bool = False
