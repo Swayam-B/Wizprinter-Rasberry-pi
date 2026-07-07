@@ -9,14 +9,14 @@
     BoxLayout:
         orientation: 'vertical'
 
-        # ── Status bar with back button ───────────────────────────────────────
+        # Status bar with back button
         StatusBar:
             title: 'Sign In'
             hide_home: True
             show_back: True
             on_back: root.go_back()
 
-        # ── Form content ──────────────────────────────────────────────────────
+        # Form content
         BoxLayout:
             orientation: 'vertical'
             padding: ['20dp', '12dp']
@@ -39,7 +39,7 @@
                     text_size: self.size
                     halign: 'left'
 
-                # Visible, styled text input — consistent with wifi.kv keyboard style
+                # Border color driven by root.email_focused — never refs id in canvas
                 BoxLayout:
                     size_hint_y: None
                     height: '42dp'
@@ -51,7 +51,7 @@
                             size: self.size
                             radius: [8]
                         Color:
-                            rgba: (0.075, 0.498, 0.925, 0.6) if username_input.focus else BORDER_COLOR
+                            rgba: (0.075, 0.498, 0.925, 0.6) if root.email_focused else BORDER_COLOR
                         Line:
                             rounded_rectangle: [self.x, self.y, self.width, self.height, 8]
                             width: 1.2
@@ -66,6 +66,7 @@
                         hint_text_color: TEXT_MUTED
                         cursor_color: PRIMARY_COLOR
                         padding: ['14dp', '10dp']
+                        on_focus: root.email_focused = self.focus
 
             # Password field
             BoxLayout:
@@ -87,7 +88,6 @@
                 BoxLayout:
                     size_hint_y: None
                     height: '42dp'
-                    spacing: '0dp'
                     canvas.before:
                         Color:
                             rgba: BG_SURFACE
@@ -96,7 +96,7 @@
                             size: self.size
                             radius: [8]
                         Color:
-                            rgba: (0.075, 0.498, 0.925, 0.6) if password_input.focus else BORDER_COLOR
+                            rgba: (0.075, 0.498, 0.925, 0.6) if root.pwd_focused else BORDER_COLOR
                         Line:
                             rounded_rectangle: [self.x, self.y, self.width, self.height, 8]
                             width: 1.2
@@ -112,17 +112,19 @@
                         hint_text_color: TEXT_MUTED
                         cursor_color: PRIMARY_COLOR
                         padding: ['14dp', '10dp']
+                        on_focus: root.pwd_focused = self.focus
 
-                    # Show/Hide toggle — same style as wifi.kv
                     Button:
                         size_hint_x: None
                         width: '60dp'
+                        font_size: '12sp'
+                        bold: True
                         background_color: TRANSPARENT
+                        color: TEXT_MUTED
                         on_release: root.toggle_password()
                         Label:
                             text: 'Hide' if root.password_visible else 'Show'
                             font_size: '12sp'
-                            bold: True
                             color: TEXT_MUTED
                             center: self.parent.center
 
@@ -152,7 +154,7 @@
                         size: self.size
                         radius: [10]
                 Label:
-                    text: 'Signing in…' if root.is_loading else 'Sign In'
+                    text: 'Signing in\u2026' if root.is_loading else 'Sign In'
                     font_size: '17sp'
                     bold: True
                     color: WHITE
@@ -160,7 +162,6 @@
 
             Widget:
 
-        # ── Bottom indicator ──────────────────────────────────────────────────
         AnchorLayout:
             size_hint_y: None
             height: '16dp'

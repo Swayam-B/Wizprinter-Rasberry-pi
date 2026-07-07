@@ -27,16 +27,17 @@
                         pos: self.pos
                         size: self.size
                 Label:
-                    text: '📶'
-                    font_size: '18sp'
+                    text: 'WiFi'
+                    font_size: '14sp'
+                    bold: True
+                    color: PRIMARY_COLOR
                     size_hint_x: None
-                    width: '28dp'
-                    halign: 'center'
+                    width: '26dp'
                 Label:
                     text: 'SELECT NETWORK'
                     font_size: '13sp'
                     bold: True
-                    color: PRIMARY_COLOR
+                    color: 0.075, 0.498, 0.925, 0.8
                     text_size: self.size
                     halign: 'left'
                     valign: 'middle'
@@ -98,7 +99,7 @@
                             color: 1, 0.6, 0.3, 1
                             halign: 'center'
 
-                    # Dynamically populated network rows (from Python on_networks)
+                    # Dynamically populated network rows
                     BoxLayout:
                         id: network_rows
                         orientation: 'vertical'
@@ -113,7 +114,7 @@
                 spacing: '10dp'
 
                 Button:
-                    text: '↺  REFRESH'
+                    text: '\u21ba  REFRESH'
                     font_size: '13sp'
                     bold: True
                     size_hint_x: 0.5
@@ -143,8 +144,8 @@
                             radius: [8]
 
         # ── Password prompt modal ─────────────────────────────────────────────
-        # Uses the same TextInput style as login.kv for consistency
         BoxLayout:
+            id: pwd_modal
             size_hint: None, None
             size: '400dp', '230dp'
             pos_hint: {'center_x': 0.5, 'center_y': 0.5}
@@ -184,8 +185,9 @@
                 halign: 'center'
                 text_size: self.size
 
-            # Input row — matching login.kv styling exactly
+            # Input row — border color driven by root property, not canvas id ref
             BoxLayout:
+                id: pwd_input_row
                 size_hint_y: None
                 height: '44dp'
                 spacing: '0dp'
@@ -197,7 +199,7 @@
                         size: self.size
                         radius: [8]
                     Color:
-                        rgba: (0.075, 0.498, 0.925, 0.6) if pwd_input.focus else BORDER_COLOR
+                        rgba: (0.075, 0.498, 0.925, 0.8) if root.pwd_focused else BORDER_COLOR
                     Line:
                         rounded_rectangle: [self.x, self.y, self.width, self.height, 8]
                         width: 1.2
@@ -213,6 +215,7 @@
                     hint_text_color: TEXT_MUTED
                     cursor_color: PRIMARY_COLOR
                     padding: ['14dp', '10dp']
+                    on_focus: root.pwd_focused = self.focus
 
                 Button:
                     text: 'Hide' if root.password_visible else 'Show'
