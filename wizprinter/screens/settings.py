@@ -15,7 +15,6 @@ from kivy.uix.popup import Popup
 from kivy.uix.screenmanager import Screen
 from kivy.uix.spinner import Spinner
 
-import wizprinter.accessibility as accessibility
 from wizprinter.accessibility import a11y
 import wizprinter.api_client as api
 
@@ -198,25 +197,12 @@ class SettingsScreen(Screen):
         )
         root.add_widget(tts_btn)
 
-        info_lbl = Label(
-            text=(
-                f"High contrast: {'ON' if accessibility.HIGH_CONTRAST_ENABLED else 'OFF'}\n"
-                f"Font scale: {accessibility.FONT_SCALE:g}x\n"
-                "Set A11Y_HIGH_CONTRAST=1 or A11Y_FONT_SCALE in .env "
-                "and restart to change these."
-            ),
-            font_size="11sp", color=(0.573, 0.678, 0.788, 1),
-            halign="center", valign="middle",
-        )
-        info_lbl.bind(size=lambda w, v: setattr(w, "text_size", v))
-        root.add_widget(info_lbl)
-
         close_btn = Button(text="Close", size_hint_y=None, height=dp(44), font_size="13sp")
         root.add_widget(close_btn)
 
         popup = Popup(
             title="Accessibility", content=root,
-            size_hint=(None, None), size=(dp(380), dp(260)),
+            size_hint=(None, None), size=(dp(380), dp(160)),
             auto_dismiss=False,
         )
 
