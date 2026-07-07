@@ -15,6 +15,7 @@ from kivy.uix.popup import Popup
 from kivy.uix.screenmanager import Screen
 from kivy.uix.spinner import Spinner
 
+import wizprinter.accessibility as accessibility
 from wizprinter.accessibility import a11y
 import wizprinter.api_client as api
 
@@ -31,9 +32,7 @@ TIMEZONES = [
     "Asia/Shanghai", "Asia/Tokyo", "Asia/Seoul", "Australia/Sydney",
     "Pacific/Auckland",
 ]
-NTP_SERVERS = [
-    "pool.ntp.org", "time.google.com", "time.cloudflare.com", "time.apple.com",
-]
+DEFAULT_NTP_SERVER = "pool.ntp.org"
 
 
 def _get_current_timezone() -> str:
@@ -121,15 +120,6 @@ class SettingsScreen(Screen):
             values=TIMEZONES, size_hint_y=None, height=dp(44), font_size="13sp",
         )
         root.add_widget(tz_spinner)
-        root.add_widget(Label(
-            text="NTP server:", size_hint_y=None, height=dp(24),
-            font_size="12sp", halign="left",
-        ))
-        ntp_spinner = Spinner(
-            text=NTP_SERVERS[0], values=NTP_SERVERS,
-            size_hint_y=None, height=dp(40), font_size="13sp",
-        )
-        root.add_widget(ntp_spinner)
         status_lbl = Label(
             text="", size_hint_y=None, height=dp(28),
             font_size="12sp", color=(0.4, 0.9, 0.5, 1),
@@ -147,21 +137,20 @@ class SettingsScreen(Screen):
 
         popup = Popup(
             title="Time & Region", content=root,
-            size_hint=(None, None), size=(dp(420), dp(340)),
+            size_hint=(None, None), size=(dp(420), dp(280)),
             auto_dismiss=False,
         )
         cancel_btn.bind(on_release=lambda *a: popup.dismiss())
 
         def do_apply(*a):
             chosen_tz  = tz_spinner.text
-            chosen_ntp = ntp_spinner.text
             status_lbl.text  = "Applying…"
             status_lbl.color = (1, 0.9, 0.4, 1)
             apply_btn.disabled = True
 
             def bg():
                 ok_tz,  msg_tz  = _apply_timezone(chosen_tz)
-                ok_ntp, msg_ntp = _sync_ntp(chosen_ntp)
+                ok_ntp, msg_ntp = _sync_ntp(DEFAULT_NTP_SERVER)
                 Clock.schedule_once(
                     lambda dt: _on_done(ok_tz, msg_tz, ok_ntp, msg_ntp), 0
                 )
@@ -196,6 +185,50 @@ class SettingsScreen(Screen):
         """
         a11y.speak("Opening network configuration.")
         App.get_running_app().navigate("wifi")
+
+    # ── Accessibility ─────────────────────────────────────────────────────────
+
+    def open_accessibility(self):
+        a11y.speak("Accessibility settings.")
+        root = BoxLayout(orientation="vertical", padding=dp(12), spacing=dp(10))
+
+        tts_btn = Button(
+            text=f"Text-to-Speech: {'ON' if a11y.tts_enabled() else 'OFF'}",
+            size_hint_y=None, height=dp(44), font_size="13sp",
+        )
+        root.add_widget(tts_btn)
+
+        info_lbl = Label(
+            text=(
+                f"High contrast: {'ON' if accessibility.HIGH_CONTRAST_ENABLED else 'OFF'}\n"
+                f"Font scale: {accessibility.FONT_SCALE:g}x\n"
+                "Set A11Y_HIGH_CONTRAST=1 or A11Y_FONT_SCALE in .env "
+                "and restart to change these."
+            ),
+            font_size="11sp", color=(0.573, 0.678, 0.788, 1),
+            halign="center", valign="middle",
+        )
+        info_lbl.bind(size=lambda w, v: setattr(w, "text_size", v))
+        root.add_widget(info_lbl)
+
+        close_btn = Button(text="Close", size_hint_y=None, height=dp(44), font_size="13sp")
+        root.add_widget(close_btn)
+
+        popup = Popup(
+            title="Accessibility", content=root,
+            size_hint=(None, None), size=(dp(380), dp(260)),
+            auto_dismiss=False,
+        )
+
+        def toggle_tts(*a):
+            new_state = not a11y.tts_enabled()
+            a11y.set_tts_enabled(new_state)
+            tts_btn.text = f"Text-to-Speech: {'ON' if new_state else 'OFF'}"
+            a11y.speak("Text to speech enabled." if new_state else "")
+
+        tts_btn.bind(on_release=toggle_tts)
+        close_btn.bind(on_release=lambda *a: popup.dismiss())
+        popup.open()
 
     # ── Logout ────────────────────────────────────────────────────────────────
 

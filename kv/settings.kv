@@ -1,3 +1,62 @@
+<ClockIcon@Widget>:
+    canvas:
+        Color:
+            rgba: WHITE
+        Line:
+            circle: [self.center_x, self.center_y, dp(11)]
+            width: 1.6
+        Line:
+            points: [self.center_x, self.center_y, self.center_x, self.center_y + dp(6)]
+            width: 1.6
+        Line:
+            points: [self.center_x, self.center_y, self.center_x + dp(5), self.center_y - dp(2)]
+            width: 1.6
+
+<WifiIcon@Widget>:
+    canvas:
+        Color:
+            rgba: WHITE
+        Line:
+            circle: [self.center_x, self.center_y - dp(6), dp(2)]
+            width: 1.6
+        Line:
+            circle: [self.center_x, self.center_y - dp(6), dp(7), 215, 325]
+            width: 1.6
+        Line:
+            circle: [self.center_x, self.center_y - dp(6), dp(12), 215, 325]
+            width: 1.6
+
+<AccessibilityIcon@Widget>:
+    canvas:
+        Color:
+            rgba: WHITE
+        Line:
+            circle: [self.center_x, self.center_y + dp(9), dp(3.5)]
+            width: 1.6
+        Line:
+            points: [self.center_x - dp(8), self.center_y + dp(2), self.center_x + dp(8), self.center_y + dp(2)]
+            width: 1.6
+        Line:
+            points: [self.center_x, self.center_y + dp(2), self.center_x, self.center_y - dp(4)]
+            width: 1.6
+        Line:
+            points: [self.center_x, self.center_y - dp(4), self.center_x - dp(6), self.center_y - dp(11)]
+            width: 1.6
+        Line:
+            points: [self.center_x, self.center_y - dp(4), self.center_x + dp(6), self.center_y - dp(11)]
+            width: 1.6
+
+<PowerIcon@Widget>:
+    canvas:
+        Color:
+            rgba: DANGER_COLOR
+        Line:
+            circle: [self.center_x, self.center_y - dp(1), dp(9), -60, 240]
+            width: 1.8
+        Line:
+            points: [self.center_x, self.center_y + dp(9), self.center_x, self.center_y - dp(2)]
+            width: 1.8
+
 <SettingsScreen>:
     canvas.before:
         Color:
@@ -44,29 +103,17 @@
                     spacing: '12dp'
                     pos: self.parent.pos
                     size: self.parent.size
-                    Label:
-                        text: '🕐'
-                        font_size: '22sp'
+                    ClockIcon:
                         size_hint_x: None
                         width: '36dp'
-                        halign: 'center'
-                    BoxLayout:
-                        orientation: 'vertical'
-                        Label:
-                            text: 'Time & Region'
-                            font_size: '16sp'
-                            bold: True
-                            color: WHITE
-                            text_size: self.size
-                            halign: 'left'
-                            valign: 'middle'
-                        Label:
-                            text: 'Current: ' + root.current_tz
-                            font_size: '11sp'
-                            color: 1, 1, 1, 0.7
-                            text_size: self.size
-                            halign: 'left'
-                            valign: 'middle'
+                    Label:
+                        text: 'Time & Region'
+                        font_size: '16sp'
+                        bold: True
+                        color: WHITE
+                        text_size: self.size
+                        halign: 'left'
+                        valign: 'middle'
                     Label:
                         size_hint_x: None
                         width: '24dp'
@@ -92,29 +139,17 @@
                     spacing: '12dp'
                     pos: self.parent.pos
                     size: self.parent.size
-                    Label:
-                        text: '📶'
-                        font_size: '22sp'
+                    WifiIcon:
                         size_hint_x: None
                         width: '36dp'
-                        halign: 'center'
-                    BoxLayout:
-                        orientation: 'vertical'
-                        Label:
-                            text: 'Network Config'
-                            font_size: '16sp'
-                            bold: True
-                            color: WHITE
-                            text_size: self.size
-                            halign: 'left'
-                            valign: 'middle'
-                        Label:
-                            text: 'Change Wi-Fi — no sign-in required'
-                            font_size: '11sp'
-                            color: 1, 1, 1, 0.7
-                            text_size: self.size
-                            halign: 'left'
-                            valign: 'middle'
+                    Label:
+                        text: 'Network Config'
+                        font_size: '16sp'
+                        bold: True
+                        color: WHITE
+                        text_size: self.size
+                        halign: 'left'
+                        valign: 'middle'
                     Label:
                         size_hint_x: None
                         width: '24dp'
@@ -122,18 +157,41 @@
                         font_size: '22sp'
                         color: 1, 1, 1, 0.6
 
-            # Accessibility toggle row (high-contrast hint)
-            BoxLayout:
+            # Accessibility
+            Button:
                 size_hint_y: None
-                height: '40dp'
-                padding: ['4dp', 0]
-                Label:
-                    text: 'Accessibility: set A11Y_HIGH_CONTRAST=1 or A11Y_TTS=1 in .env'
-                    font_size: '10sp'
-                    color: TEXT_MUTED
-                    text_size: self.size
-                    halign: 'left'
-                    valign: 'middle'
+                height: '58dp'
+                background_color: TRANSPARENT
+                on_release: root.open_accessibility()
+                canvas.before:
+                    Color:
+                        rgba: PRIMARY_COLOR
+                    RoundedRectangle:
+                        pos: self.pos
+                        size: self.size
+                        radius: [12]
+                BoxLayout:
+                    padding: ['16dp', '0dp']
+                    spacing: '12dp'
+                    pos: self.parent.pos
+                    size: self.parent.size
+                    AccessibilityIcon:
+                        size_hint_x: None
+                        width: '36dp'
+                    Label:
+                        text: 'Accessibility'
+                        font_size: '16sp'
+                        bold: True
+                        color: WHITE
+                        text_size: self.size
+                        halign: 'left'
+                        valign: 'middle'
+                    Label:
+                        size_hint_x: None
+                        width: '24dp'
+                        text: '›'
+                        font_size: '22sp'
+                        color: 1, 1, 1, 0.6
 
             # Log Out
             Button:
@@ -158,13 +216,9 @@
                     spacing: '12dp'
                     pos: self.parent.pos
                     size: self.parent.size
-                    Label:
-                        text: '⏻'
-                        font_size: '22sp'
-                        color: DANGER_COLOR
+                    PowerIcon:
                         size_hint_x: None
                         width: '36dp'
-                        halign: 'center'
                     Label:
                         text: 'Log Out'
                         font_size: '16sp'

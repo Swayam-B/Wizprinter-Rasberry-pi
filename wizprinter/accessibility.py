@@ -100,6 +100,16 @@ class _Accessibility:
                 except Exception:
                     pass
 
+    @staticmethod
+    def tts_enabled() -> bool:
+        return TTS_ENABLED
+
+    @staticmethod
+    def set_tts_enabled(enabled: bool) -> None:
+        """Toggle TTS for the remainder of this session (does not persist to .env)."""
+        global TTS_ENABLED
+        TTS_ENABLED = enabled
+
     # ── High-contrast ─────────────────────────────────────────────────────────
 
     @staticmethod
