@@ -19,6 +19,7 @@ from kivy.properties import StringProperty, BooleanProperty, ListProperty, Numer
 from kivy.clock import Clock
 from kivy.metrics import dp
 
+from wizprinter.hardware import MOCK_HARDWARE
 from wizprinter.utils.image_file import is_valid_jpeg
 
 # ── Constants ─────────────────────────────────────────────────────────────────
@@ -127,6 +128,9 @@ class ScanScreen(Screen):
 
     def _discover_scanner_bg(self):
         """Background thread: find an airscan/USB SANE device."""
+        if MOCK_HARDWARE:
+            Clock.schedule_once(lambda dt: self._on_discovery_done("Mock Scanner", ""), 0)
+            return
         device = None
         try:
             if not shutil.which("scanimage"):
@@ -244,6 +248,18 @@ class ScanScreen(Screen):
 
         page_num = len(self.scanned_images) + 1
         out_path = os.path.join(self.temp_dir, f"page_{page_num:03d}.jpg")
+
+        if MOCK_HARDWARE:
+            try:
+                PILImage.new("RGB", (850, 1100), (255, 255, 255)).save(tmp_path, "JPEG")
+                os.replace(tmp_path, out_path)
+                abs_out = os.path.abspath(out_path)
+                Clock.schedule_once(lambda dt, p=abs_out: self._on_scan_success(p), 0)
+            except Exception as e:
+                Clock.schedule_once(
+                    lambda dt, err=e: self._on_scan_error(f"Mock scan error:\n{err}", tmp_path), 0
+                )
+            return
 
         cmd = [
             "scanimage",

@@ -1,8 +1,13 @@
-"""Preview screen — scan & exam preview, grading, polling, print with retry."""
+"""Preview screen — scan & exam preview, grade submission, and manual print.
+
+The poll/download/print state machine lives in GradingStatusMixin
+(grading_status.py). Once grading completes, control hands off to
+ReviewScreen for teacher review/approval before any output is finalized —
+this screen only kicks grading off and reacts to completion/failure.
+"""
 
 import glob
 import os
-import threading
 
 from kivy.metrics import dp
 from kivy.uix.label import Label
@@ -16,15 +21,11 @@ from kivy.properties import BooleanProperty, StringProperty
 from kivy.clock import Clock
 
 import wizprinter.api_client as api
+from wizprinter.grading import GradeOutputMode
+from wizprinter.screens.grading_status import GradingStatusMixin
 from wizprinter.utils.image_file import is_valid_jpeg
 from wizprinter.utils.pdf_preview import pdf_to_png_paths
 from wizprinter.utils.printer import PrinterManager
-
-# ── Constants ─────────────────────────────────────────────────────────────────
-PRINT_JOB_MAX_RETRIES = 3
-PRINT_JOB_RETRY_DELAY = 4.0   # seconds between print retries
-POLL_INTERVAL_SEC = 10.0       # seconds between batch/session polls
-MAX_POLL_ATTEMPTS = 60         # give up after ~10 minutes
 
 
 # ── Popup helper ──────────────────────────────────────────────────────────────
@@ -62,7 +63,7 @@ def _show_error_popup(title: str, message: str, on_retry=None):
 
 # ── Screen ────────────────────────────────────────────────────────────────────
 
-class PreviewScreen(Screen):
+class PreviewScreen(GradingStatusMixin, Screen):
     page_info       = StringProperty("DOC: 0 PGS")
     show_success    = BooleanProperty(False)
     success_message = StringProperty("")
@@ -72,10 +73,13 @@ class PreviewScreen(Screen):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.printer = PrinterManager()
-        self._preview_mode   = "none"   # "scan" | "exam"
-        self._exam_row       = None
-        self._exam_local_pdf = ""
-        self._poll_attempts  = 0
+        self._preview_mode    = "none"   # "scan" | "exam"
+        self._exam_row        = None
+        self._exam_local_pdf  = ""
+        self._active_exam_id  = ""
+        self._active_class_id = ""
+        self._pending_output_mode = GradeOutputMode.PRINT_AND_SEND
+        self._grading_status_init()
 
     # ── Scan preview ──────────────────────────────────────────────────────────
 
@@ -203,193 +207,82 @@ class PreviewScreen(Screen):
             _show_error_popup("No Scan", "No student scan found.\nUse Scan to capture pages first.")
             return
 
-        self.success_message = "Submitting for grading…"
-        self.show_success    = True
-        self._poll_attempts  = 0
+        self._active_exam_id  = exam_id
+        self._active_class_id = class_id
+        self._show_grade_output_popup(exam_id, class_id, pdf_path)
 
-        api.run_in_thread(
-            api.submit_grading_session,
-            exam_id, class_id, pdf_path,
-            on_success=self._on_submitted,
-            on_error=self._on_grade_error,
+    # ── Grade Output popup ────────────────────────────────────────────────────
+
+    def _show_grade_output_popup(self, exam_id: str, class_id: str, pdf_path: str):
+        content = BoxLayout(orientation="vertical", padding=dp(14), spacing=dp(10))
+        content.add_widget(Label(
+            text="Choose what happens once grading finishes.\n"
+                 "You'll still review each student before anything is sent.",
+            font_size="12sp", color=(0.8, 0.87, 0.95, 1),
+            size_hint_y=None, height=dp(48),
+            halign="center", valign="middle",
+        ))
+
+        print_send_btn = Button(
+            text="Grade and Print + Send to WizPrinter",
+            size_hint_y=None, height=dp(52), font_size="13sp", bold=True,
+            background_color=(0.08, 0.5, 0.9, 1),
+            halign="center", valign="middle",
+        )
+        send_only_btn = Button(
+            text="Grade and Send to WizPrinter Only",
+            size_hint_y=None, height=dp(52), font_size="13sp",
+            halign="center", valign="middle",
+        )
+        cancel_btn = Button(
+            text="Cancel", size_hint_y=None, height=dp(40), font_size="12sp",
+        )
+        for btn in (print_send_btn, send_only_btn):
+            btn.bind(size=lambda w, v: setattr(w, "text_size", (v[0] - dp(16), v[1])))
+        content.add_widget(print_send_btn)
+        content.add_widget(send_only_btn)
+        content.add_widget(cancel_btn)
+
+        popup = Popup(
+            title="Grade Output", content=content,
+            size_hint=(None, None), size=(dp(380), dp(300)),
+            auto_dismiss=False,
         )
 
-    def _on_submitted(self, data):
-        batch_id   = data.get("batch_id")
-        session_id = data.get("session_id")
-        self.success_message = "Grading in progress…"
+        def choose(mode: GradeOutputMode):
+            self._pending_output_mode = mode
+            popup.dismiss()
+            self.start_grading(exam_id, class_id, pdf_path)
 
-        if batch_id:
-            Clock.schedule_once(lambda dt: self._schedule_poll_batch(batch_id), POLL_INTERVAL_SEC)
-        elif session_id:
-            Clock.schedule_once(lambda dt: self._schedule_poll_session(session_id), POLL_INTERVAL_SEC)
-        else:
-            self._on_grade_error(Exception(f"Unexpected response: {data}"))
+        print_send_btn.bind(on_release=lambda *a: choose(GradeOutputMode.PRINT_AND_SEND))
+        send_only_btn.bind(on_release=lambda *a: choose(GradeOutputMode.SEND_ONLY))
+        cancel_btn.bind(on_release=lambda *a: popup.dismiss())
+        popup.open()
 
-    # ── Batch polling ─────────────────────────────────────────────────────────
+    # ── GradingStatusMixin callbacks ──────────────────────────────────────────
 
-    def _schedule_poll_batch(self, batch_id):
-        self._poll_attempts += 1
-        if self._poll_attempts > MAX_POLL_ATTEMPTS:
-            self._on_grade_error(Exception("Grading timed out. Please try again."))
-            return
-        threading.Thread(
-            target=self._poll_batch_bg,
-            args=(batch_id,),
-            daemon=True,
-        ).start()
+    def _on_grading_complete(self, sessions: list):
+        """Grading finished — hand off to ReviewScreen instead of auto-printing."""
+        self.show_success = False
+        app = App.get_running_app()
+        review_screen = app.root.get_screen("review")
+        review_screen.load_review(
+            sessions=sessions,
+            output_mode=self._pending_output_mode,
+            exam=self._exam_row,
+            exam_id=self._active_exam_id,
+            class_id=self._active_class_id,
+        )
+        app.navigate("review")
 
-    def _poll_batch_bg(self, batch_id):
-        try:
-            status = api.get_batch_status(batch_id)
-            Clock.schedule_once(lambda dt: self._handle_batch_status(status, batch_id), 0)
-        except api.RateLimitedError as e:
-            # Respect the limiter — back off and retry
-            Clock.schedule_once(
-                lambda dt: self._schedule_poll_batch(batch_id),
-                POLL_INTERVAL_SEC * 2,
-            )
-        except Exception as e:
-            Clock.schedule_once(lambda dt, err=e: self._on_grade_error(err), 0)
-
-    def _handle_batch_status(self, status, batch_id):
-        total     = status.get("total", 1)
-        completed = status.get("completed", 0)
-        failed    = status.get("failed", 0)
-        overall   = status.get("status", "")
-
-        self.success_message = f"Grading… {completed}/{total} complete"
-
-        if overall == "completed" or (completed + failed) >= total:
-            graded_url = next(
-                (s["graded_url"] for s in status.get("sessions", [])
-                 if s.get("status") == "completed" and s.get("graded_url")),
-                None,
-            )
-            if graded_url:
-                self._download_and_print(graded_url)
-            else:
-                self.success_message = "Grading complete (no PDF returned)."
-                Clock.schedule_once(self._finish, 3.0)
-        else:
-            Clock.schedule_once(
-                lambda dt: self._schedule_poll_batch(batch_id), POLL_INTERVAL_SEC
-            )
-
-    # ── Session polling ───────────────────────────────────────────────────────
-
-    def _schedule_poll_session(self, session_id):
-        self._poll_attempts += 1
-        if self._poll_attempts > MAX_POLL_ATTEMPTS:
-            self._on_grade_error(Exception("Grading timed out. Please try again."))
-            return
-        threading.Thread(
-            target=self._poll_session_bg,
-            args=(session_id,),
-            daemon=True,
-        ).start()
-
-    def _poll_session_bg(self, session_id):
-        try:
-            status = api.get_session_status(session_id)
-            Clock.schedule_once(lambda dt: self._handle_session_status(status, session_id), 0)
-        except api.RateLimitedError:
-            Clock.schedule_once(
-                lambda dt: self._schedule_poll_session(session_id),
-                POLL_INTERVAL_SEC * 2,
-            )
-        except Exception as e:
-            Clock.schedule_once(lambda dt, err=e: self._on_grade_error(err), 0)
-
-    def _handle_session_status(self, status, session_id):
-        state = status.get("status", "")
-        self.success_message = f"Grading… ({state})"
-
-        if state == "completed":
-            graded_url = status.get("graded_url")
-            if graded_url:
-                self._download_and_print(graded_url)
-            else:
-                self.success_message = "Grading complete (no PDF returned)."
-                Clock.schedule_once(self._finish, 3.0)
-        elif state == "failed":
-            self._on_grade_error(Exception(status.get("error", "Grading failed")))
-        else:
-            Clock.schedule_once(
-                lambda dt: self._schedule_poll_session(session_id), POLL_INTERVAL_SEC
-            )
-
-    # ── Download + print with retry ───────────────────────────────────────────
-
-    def _download_and_print(self, graded_url):
-        self.success_message = "Downloading graded PDF…"
-        dest = os.path.abspath(os.path.join("temp", "graded_result.pdf"))
-
-        def do_download():
-            try:
-                api.download_graded_pdf(graded_url, dest)
-                Clock.schedule_once(lambda dt: self._send_to_printer(dest, attempt=0), 0)
-            except Exception as e:
-                Clock.schedule_once(lambda dt, err=e: self._on_grade_error(err), 0)
-
-        threading.Thread(target=do_download, daemon=True).start()
-
-    def _send_to_printer(self, pdf_path: str, attempt: int = 0):
-        self.success_message = f"Printing… (attempt {attempt + 1})"
-        printer_name = getattr(App.get_running_app(), "selected_printer", None)
-
-        def bg():
-            try:
-                import cups
-                conn = cups.Connection()
-                if not printer_name or printer_name not in conn.getPrinters():
-                    raise RuntimeError(f"Printer '{printer_name}' not available.")
-                options = {"media": "na_letter_8.5x11in", "scaling": "100"}
-                job_id = conn.printFile(printer_name, pdf_path, "WizPrinter_Job", options)
-                Clock.schedule_once(lambda dt: self._on_print_success(job_id), 0)
-            except Exception as e:
-                Clock.schedule_once(
-                    lambda dt, err=e: self._on_print_error(err, pdf_path, attempt), 0
-                )
-
-        threading.Thread(target=bg, daemon=True).start()
-
-    def _on_print_success(self, job_id):
-        self.success_message = f"✓ Printed (job #{job_id})"
-        Clock.schedule_once(self._finish, 3.0)
-
-    def _on_print_error(self, exc, pdf_path, attempt):
-        if attempt < PRINT_JOB_MAX_RETRIES - 1:
-            self.success_message = f"Print error — retrying ({attempt + 2}/{PRINT_JOB_MAX_RETRIES})…"
-            Clock.schedule_once(
-                lambda dt: self._send_to_printer(pdf_path, attempt + 1),
-                PRINT_JOB_RETRY_DELAY,
-            )
-        else:
-            self.show_success = False
-
-            def retry_print():
-                self.success_message = "Retrying print…"
-                self.show_success    = True
-                self._send_to_printer(pdf_path, attempt=0)
-
-            _show_error_popup(
-                "Print Failed",
-                f"Could not print after {PRINT_JOB_MAX_RETRIES} attempts.\n{exc}\n\n"
-                "Check printer connection and tap Retry.",
-                on_retry=retry_print,
-            )
-
-    # ── Grade error ───────────────────────────────────────────────────────────
-
-    def _on_grade_error(self, exc):
+    def _on_grading_failed(self, exc, *, timed_out: bool):
         self.show_success = False
 
         def retry_grade():
             self.grade_document()
 
         _show_error_popup(
-            "Grading Error",
+            "Grading Timed Out" if timed_out else "Grading Error",
             str(exc),
             on_retry=retry_grade,
         )
@@ -407,7 +300,26 @@ class PreviewScreen(Screen):
             return
         self.success_message = "Sending to printer…"
         self.show_success    = True
-        self._send_to_printer(pdf_path, attempt=0)
+
+        def on_done(job_id):
+            Clock.schedule_once(self._finish, 3.0)
+
+        def on_error(exc):
+            self.show_success = False
+
+            def retry_print():
+                self.success_message = "Retrying print…"
+                self.show_success    = True
+                self.send_to_printer(pdf_path, attempt=0, on_done=on_done, on_error=on_error)
+
+            _show_error_popup(
+                "Print Failed",
+                f"Could not print after multiple attempts.\n{exc}\n\n"
+                "Check printer connection and tap Retry.",
+                on_retry=retry_print,
+            )
+
+        self.send_to_printer(pdf_path, attempt=0, on_done=on_done, on_error=on_error)
 
     # ── Cleanup ───────────────────────────────────────────────────────────────
 

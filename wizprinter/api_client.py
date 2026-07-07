@@ -333,6 +333,32 @@ def fetch_remote_config() -> dict:
     ).json()
 
 
+# ── Remote support (fleet-ops MVP) ────────────────────────────────────────────
+# NOTE: `/api/support/request` is not a documented backend endpoint yet. This
+# is the safest workable version of a "remote support hook": a best-effort,
+# fire-and-forget request that a support agent's tooling can eventually poll
+# for. It never raises — a kiosk asking for help must not itself break.
+
+def request_remote_support(reason: str, context: dict | None = None) -> bool:
+    """Best-effort ping asking a fleet dashboard to flag this device for
+    support follow-up. Returns True if the request was sent, False if it
+    could not be (network down, endpoint missing, etc.) — callers should
+    treat False as "couldn't reach support," not as an exception to handle.
+    """
+    try:
+        payload = {"reason": reason, "context": context or {}}
+        requests.post(
+            f"{BASE_URL}/api/support/request",
+            json=payload,
+            headers=_headers() if session_mgr.token else {},
+            timeout=10,
+        ).raise_for_status()
+        return True
+    except Exception as e:
+        logger.warning("Remote support request could not be sent: %s", e)
+        return False
+
+
 # ── Path sanitisation ─────────────────────────────────────────────────────────
 
 def _safe_abspath(path: str, allowed_prefix: str) -> str:

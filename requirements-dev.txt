@@ -1,0 +1,11 @@
+# WizPrinter — additional dependencies for running the test suite / CI.
+# Install: pip install -r requirements.txt -r requirements-dev.txt
+#
+# Deliberately does NOT include kivy/pycups: the pytest suite is scoped to
+# pure-Python modules (grading, api_client, session, hardware, accessibility)
+# so it can run on a plain CI runner with no display, no SANE, and no CUPS.
+# See docs/manual_qa_checklist.md for the Kivy-UI / hardware coverage that
+# still requires a real kiosk (or a Kivy+Xvfb runner) to validate.
+
+pytest>=8.0.0
+requests>=2.31.0

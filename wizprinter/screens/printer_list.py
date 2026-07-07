@@ -12,6 +12,8 @@ from kivy.uix.button import Button
 from kivy.clock import Clock
 from kivy.metrics import dp
 
+from wizprinter.hardware import MOCK_HARDWARE
+
 _C = {
     "background":        (0.063, 0.098, 0.133, 1),
     "surface_low":       (0.098, 0.149, 0.200, 1),
@@ -93,6 +95,17 @@ class PrinterListScreen(Screen):
     # ── Discovery ──────────────────────────────────────────────────────────────
 
     def _discover_printers(self):
+        if MOCK_HARDWARE:
+            found = [{
+                "name": "Mock-Printer",
+                "status": "READY",
+                "subtext": "Mock hardware mode",
+                "ready": True,
+                "color": _C["success"],
+            }]
+            Clock.schedule_once(lambda dt: self._on_discovery_done(found), 0)
+            return
+
         found = []
         try:
             import cups
@@ -276,11 +289,14 @@ class PrinterListScreen(Screen):
         """
         def bg():
             try:
-                import cups
-                conn = cups.Connection()
-                options = {"media": "na_letter_8.5x11in", "scaling": "100"}
-                job_id = conn.printFile(printer_name, pdf_path,
-                                        "WizPrinter_Job", options)
+                if MOCK_HARDWARE:
+                    job_id = "mock-job"
+                else:
+                    import cups
+                    conn = cups.Connection()
+                    options = {"media": "na_letter_8.5x11in", "scaling": "100"}
+                    job_id = conn.printFile(printer_name, pdf_path,
+                                            "WizPrinter_Job", options)
                 Clock.schedule_once(
                     lambda dt: self._on_job_sent(job_id, printer_name,
                                                  pdf_path, attempt, on_done), 0

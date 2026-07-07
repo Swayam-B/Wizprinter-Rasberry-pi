@@ -1,0 +1,38 @@
+name: CI
+
+# Scoped deliberately to pure-Python modules (grading, api_client, session,
+# hardware, accessibility) so it runs on a stock runner with no display, no
+# SANE, and no CUPS. Kivy-UI and real-hardware coverage are out of scope for
+# this workflow — see docs/manual_qa_checklist.md for what still needs a
+# real kiosk (or a Kivy+Xvfb runner) to validate.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.11", "3.13"]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install test dependencies
+        run: pip install -r requirements-dev.txt
+
+      - name: Syntax-check the full source tree
+        run: python -m compileall -q wizprinter main.py
+
+      - name: Run pytest
+        run: pytest -v
+        env:
+          WIZPRINTER_MOCK_HARDWARE: "1"

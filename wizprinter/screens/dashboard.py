@@ -8,8 +8,14 @@ from kivy.app import App
 from kivy.clock import Clock
 from kivy.properties import StringProperty, BooleanProperty
 
+from wizprinter.hardware import MOCK_HARDWARE
+from wizprinter import telemetry
+
 # Printer status refresh interval (seconds)
 PRINTER_STATUS_INTERVAL = 30
+
+# Fleet-monitoring heartbeat interval (seconds) — lightweight "still alive" signal
+HEARTBEAT_INTERVAL = 300
 
 
 def _live_printer_status(printer_name: str) -> tuple[bool, str]:
@@ -17,6 +23,8 @@ def _live_printer_status(printer_name: str) -> tuple[bool, str]:
     Query CUPS for the real-time state of *printer_name*.
     Returns (is_ready: bool, display_label: str).
     """
+    if MOCK_HARDWARE:
+        return True, printer_name
     try:
         import cups
         conn = cups.Connection()
@@ -56,15 +64,37 @@ class DashboardScreen(Screen):
         self._status_event = Clock.schedule_interval(
             lambda dt: self._refresh_printer_status(), PRINTER_STATUS_INTERVAL
         )
+        self._heartbeat_event = Clock.schedule_interval(
+            lambda dt: threading.Thread(
+                target=telemetry.record_heartbeat,
+                kwargs={"extra": {"printer_connected": self.printer_connected}},
+                daemon=True,
+            ).start(),
+            HEARTBEAT_INTERVAL,
+        )
 
     def on_leave(self):
         if hasattr(self, "_clock_event"):
             self._clock_event.cancel()
         if hasattr(self, "_status_event"):
             self._status_event.cancel()
+        if hasattr(self, "_heartbeat_event"):
+            self._heartbeat_event.cancel()
 
     def _update_time(self):
         self.current_time = datetime.now().strftime("%I:%M %p")
+
+    # ── Post-grading sync ─────────────────────────────────────────────────────
+
+    def sync_after_grading(self):
+        """
+        Called by ReviewScreen once a grading job is finalized — regardless of
+        whether the teacher chose Print+Send or Send-Only, the dashboard's
+        live state (printer status today; batch/notification counts once a
+        backend endpoint exists for them) is refreshed unconditionally.
+        """
+        if self.connected_printer_name:
+            self._refresh_printer_status()
 
     # ── Printer status ─────────────────────────────────────────────────────────
 

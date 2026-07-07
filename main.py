@@ -33,9 +33,19 @@ Config.set('input',    'mouse',      'mouse,multitouch_on_demand')
 
 from kivy.core.window import Window
 from wizprinter.app import WizPrinterApp
+from wizprinter import telemetry
 
 if __name__ == '__main__':
     Window.size = (800, 480)
     Window.top  = 0
     Window.left = 0
-    WizPrinterApp().run()
+
+    telemetry.record_heartbeat({"event": "startup"})
+    try:
+        WizPrinterApp().run()
+    except Exception as exc:
+        # Crash recovery: record the crash so it survives the process exiting.
+        # Actual process restart is handled by the OS service supervisor
+        # (see docs/deployment_checklist.md — systemd Restart=on-failure).
+        telemetry.record_crash(exc, context="main.run")
+        raise

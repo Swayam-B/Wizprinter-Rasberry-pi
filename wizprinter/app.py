@@ -20,6 +20,7 @@ from wizprinter.screens.printer_list import PrinterListScreen
 from wizprinter.screens.classes      import ClassesScreen
 from wizprinter.screens.documents    import DocumentsScreen
 from wizprinter.screens.preview      import PreviewScreen
+from wizprinter.screens.review       import ReviewScreen
 from wizprinter.screens.scan         import ScanScreen
 from wizprinter.screens.settings     import SettingsScreen
 from wizprinter.widgets.statusbar    import StatusBar
@@ -43,7 +44,7 @@ class WizPrinterApp(App):
         kv_files = [
             'theme.kv', 'widgets.kv', 'landing.kv', 'wifi.kv', 'login.kv',
             'dashboard.kv', 'printerList.kv', 'classes.kv', 'documents.kv',
-            'preview.kv', 'scan.kv', 'settings.kv',
+            'preview.kv', 'review.kv', 'scan.kv', 'settings.kv',
         ]
         for kv_file in kv_files:
             path = os.path.join(kv_dir, kv_file)
@@ -64,6 +65,7 @@ class WizPrinterApp(App):
             sm.add_widget(ClassesScreen(name='classes'))
             sm.add_widget(DocumentsScreen(name='documents'))
             sm.add_widget(PreviewScreen(name='preview'))
+            sm.add_widget(ReviewScreen(name='review'))
             sm.add_widget(ScanScreen(name='scan'))
             sm.add_widget(SettingsScreen(name='settings'))
         except Exception as e:

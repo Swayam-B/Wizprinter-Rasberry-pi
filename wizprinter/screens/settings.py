@@ -15,7 +15,10 @@ from kivy.uix.popup import Popup
 from kivy.uix.screenmanager import Screen
 from kivy.uix.spinner import Spinner
 
+from kivy.uix.textinput import TextInput
+
 from wizprinter.accessibility import a11y
+import wizprinter.admin_pin as admin_pin
 import wizprinter.api_client as api
 
 logger = logging.getLogger(__name__)
@@ -185,6 +188,32 @@ class SettingsScreen(Screen):
         a11y.speak("Opening network configuration.")
         App.get_running_app().navigate("wifi")
 
+    # ── Remote support (fleet-ops MVP) ────────────────────────────────────────
+
+    def request_help(self):
+        a11y.speak("Requesting remote support.")
+
+        def bg():
+            sent = api.request_remote_support(
+                reason="Teacher requested help from Settings screen.",
+                context={"screen": "settings"},
+            )
+            Clock.schedule_once(lambda dt: self._on_help_requested(sent), 0)
+
+        threading.Thread(target=bg, daemon=True).start()
+
+    def _on_help_requested(self, sent: bool):
+        if sent:
+            a11y.speak("Support has been notified.")
+            _show_info_popup("Help Requested", "Support has been notified and will follow up.")
+        else:
+            a11y.speak("Could not reach support. Check your network connection.")
+            _show_info_popup(
+                "Could Not Reach Support",
+                "No connection to the support system right now.\n"
+                "Please check the network or contact support directly.",
+            )
+
     # ── Accessibility ─────────────────────────────────────────────────────────
 
     def open_accessibility(self):
@@ -219,6 +248,50 @@ class SettingsScreen(Screen):
     # ── Logout ────────────────────────────────────────────────────────────────
 
     def logout(self):
+        if admin_pin.is_enabled():
+            self._prompt_admin_pin(self._do_logout)
+        else:
+            self._do_logout()
+
+    def _prompt_admin_pin(self, on_success):
+        content = BoxLayout(orientation="vertical", padding=dp(12), spacing=dp(10))
+        content.add_widget(Label(
+            text="Enter admin PIN to log out.",
+            font_size="13sp", size_hint_y=None, height=dp(24),
+        ))
+        pin_input = TextInput(
+            password=True, multiline=False, font_size="15sp",
+            size_hint_y=None, height=dp(44),
+        )
+        content.add_widget(pin_input)
+        error_lbl = Label(text="", font_size="11sp", color=(1, 0.4, 0.4, 1),
+                          size_hint_y=None, height=dp(20))
+        content.add_widget(error_lbl)
+
+        btn_row = BoxLayout(orientation="horizontal", size_hint_y=None, height=dp(44), spacing=dp(8))
+        cancel_btn = Button(text="Cancel", font_size="13sp")
+        submit_btn = Button(text="Submit", font_size="13sp",
+                            background_color=(0.08, 0.5, 0.9, 1))
+        btn_row.add_widget(cancel_btn)
+        btn_row.add_widget(submit_btn)
+        content.add_widget(btn_row)
+
+        popup = Popup(title="Admin PIN Required", content=content,
+                      size_hint=(None, None), size=(dp(340), dp(220)), auto_dismiss=False)
+
+        def submit(*a):
+            if admin_pin.check(pin_input.text):
+                popup.dismiss()
+                on_success()
+            else:
+                error_lbl.text = "Incorrect PIN."
+                pin_input.text = ""
+
+        cancel_btn.bind(on_release=lambda *a: popup.dismiss())
+        submit_btn.bind(on_release=submit)
+        popup.open()
+
+    def _do_logout(self):
         a11y.speak("Logging out.")
         api.clear_session()
         app = App.get_running_app()

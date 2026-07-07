@@ -193,6 +193,52 @@
                         font_size: '22sp'
                         color: 1, 1, 1, 0.6
 
+            # Get Help — remote support hook (fleet-ops MVP)
+            Button:
+                size_hint_y: None
+                height: '58dp'
+                background_color: TRANSPARENT
+                on_release: root.request_help()
+                canvas.before:
+                    Color:
+                        rgba: BG_CARD
+                    RoundedRectangle:
+                        pos: self.pos
+                        size: self.size
+                        radius: [12]
+                    Color:
+                        rgba: BORDER_COLOR
+                    Line:
+                        rounded_rectangle: [self.x, self.y, self.width, self.height, 12]
+                        width: 1
+                BoxLayout:
+                    padding: ['16dp', '0dp']
+                    spacing: '12dp'
+                    pos: self.parent.pos
+                    size: self.parent.size
+                    Label:
+                        text: '?'
+                        font_size: '20sp'
+                        bold: True
+                        color: WHITE
+                        size_hint_x: None
+                        width: '36dp'
+                        halign: 'center'
+                    Label:
+                        text: 'Get Help'
+                        font_size: '16sp'
+                        bold: True
+                        color: WHITE
+                        text_size: self.size
+                        halign: 'left'
+                        valign: 'middle'
+                    Label:
+                        size_hint_x: None
+                        width: '24dp'
+                        text: '›'
+                        font_size: '22sp'
+                        color: 1, 1, 1, 0.6
+
             # Log Out
             Button:
                 size_hint_y: None
