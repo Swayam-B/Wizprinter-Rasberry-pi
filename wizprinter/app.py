@@ -97,6 +97,11 @@ class WizPrinterApp(App):
         if screen_name == 'printer_list' and origin:
             self._printer_list_origin = origin
 
+        # A screen change ends any pending "first tap" — the next tap on the new
+        # screen must start fresh (speak), never accidentally activate.
+        from wizprinter.accessibility import a11y
+        a11y.disarm()
+
         current = self.root.current
         if push_history and current != screen_name:
             self._nav_stack.append(current)
@@ -113,6 +118,9 @@ class WizPrinterApp(App):
         Screens that are always terminal (landing, dashboard) are skipped over
         so the user is never left in an unreachable state.
         """
+        from wizprinter.accessibility import a11y
+        a11y.disarm()
+
         # Pop until we find a valid target
         while self._nav_stack:
             target = self._nav_stack.pop()

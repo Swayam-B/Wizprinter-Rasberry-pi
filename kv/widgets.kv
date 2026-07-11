@@ -10,6 +10,7 @@
 
     # LEFT BUTTON SLOT (Back or Home)
     Button:
+        id: nav_btn
         size_hint: (None, None) if (not root.hide_home or root.show_back) else (0, 0)
         width: dp(50) if (not root.hide_home or root.show_back) else 0
         height: dp(45)

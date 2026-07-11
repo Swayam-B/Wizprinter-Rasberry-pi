@@ -54,10 +54,14 @@ FONT_SCALE:            float = float(os.environ.get("A11Y_FONT_SCALE", "1.0"))
 # ── TTS engine configuration ──────────────────────────────────────────────────
 # Engine: "auto" picks the best installed one (piper → pico → espeak).
 TTS_ENGINE: str = os.environ.get("A11Y_TTS_ENGINE", "auto").strip().lower()
-# espeak-ng tuning. A slower rate + a softer voice variant is much easier to
-# follow than the default. Override the voice with A11Y_TTS_VOICE, e.g.
-# "en-us+f3" (clearer female), "en-gb", or an mbrola voice like "mb-en1".
-TTS_RATE:  int = int(os.environ.get("A11Y_TTS_RATE", "150"))   # words/minute
+# espeak-ng tuning. A slower rate, a plain (not pitched-up) voice, and louder
+# amplitude are much easier to follow than the defaults. Override the voice with
+# A11Y_TTS_VOICE, e.g. "en-gb", "en-us+f2", or an mbrola voice like "mb-en1".
+# NOTE: espeak is inherently robotic — installing Pico or Piper (see module
+# docstring) is what actually makes it pleasant. These settings only make the
+# espeak *fallback* as clear as it can be.
+TTS_RATE:  int = int(os.environ.get("A11Y_TTS_RATE", "140"))    # words/minute
+TTS_PITCH: int = int(os.environ.get("A11Y_TTS_PITCH", "42"))    # 0-99, lower=deeper
 TTS_VOICE: str = os.environ.get("A11Y_TTS_VOICE", "").strip()
 # Piper (neural) model path — required when engine resolves to "piper".
 PIPER_MODEL: str = os.environ.get("A11Y_PIPER_MODEL", "").strip()
@@ -87,7 +91,10 @@ HC_PALETTE = {
 }
 
 # Widget attributes that carry a speakable label, in priority order.
-_LABEL_ATTRS = ("text", "student_name", "printer_name", "title", "status_label")
+# `a11y_label` is an explicit override a widget (or KV) can set for controls
+# whose visible affordance isn't text (e.g. an icon-only Back button).
+_LABEL_ATTRS = ("a11y_label", "text", "student_name", "printer_name",
+                "title", "status_label")
 
 
 class _Accessibility:
@@ -158,8 +165,15 @@ class _Accessibility:
         devnull = subprocess.DEVNULL
 
         if engine == "espeak":
-            cmd = ["espeak-ng", "-s", str(TTS_RATE), "-g", "4"]
-            cmd += ["-v", TTS_VOICE or "en-us+f3", "--", text]
+            cmd = [
+                "espeak-ng",
+                "-s", str(TTS_RATE),     # slower = clearer
+                "-p", str(TTS_PITCH),    # lower, not pitched-up
+                "-a", "200",             # louder
+                "-g", "6",               # word gap for separation
+                "-v", TTS_VOICE or "en-us",
+                "--", text,
+            ]
             return subprocess.Popen(cmd, stdout=devnull, stderr=devnull), None
 
         if engine == "pico":
@@ -278,20 +292,28 @@ class _Accessibility:
         """Best-effort human-readable label for a control."""
         for attr in _LABEL_ATTRS:
             value = getattr(widget, attr, "")
-            if isinstance(value, str) and value.strip():
+            if isinstance(value, str) and self._meaningful(value):
                 return self._clean_label(value)
-        # Fall back to the first descendant Label/Button that carries text.
+        # Many buttons here have no text of their own — the caption is a nested
+        # child Label sitting next to icon/chevron Labels. Walk the subtree and
+        # take the first *meaningful* text (skipping symbol-only labels like "›").
         try:
             stack = list(getattr(widget, "children", []))
             while stack:
                 child = stack.pop(0)
                 text = getattr(child, "text", "")
-                if isinstance(text, str) and text.strip():
+                if isinstance(text, str) and self._meaningful(text):
                     return self._clean_label(text)
                 stack.extend(getattr(child, "children", []))
         except Exception:
             pass
         return "button"
+
+    @staticmethod
+    def _meaningful(text: str) -> bool:
+        # Ignore blanks and pure-symbol captions ("›", "?", "×") — they carry no
+        # spoken meaning and would otherwise mask the real label.
+        return any(ch.isalnum() for ch in text)
 
     @staticmethod
     def _clean_label(text: str) -> str:
@@ -311,6 +333,10 @@ class _Accessibility:
     def _is_armed(self, widget) -> bool:
         with self._arm_lock:
             return self._armed_ref is not None and self._armed_ref() is widget
+
+    def disarm(self) -> None:
+        """Public: forget any armed control (call on screen change)."""
+        self._disarm()
 
     def _disarm(self) -> None:
         with self._arm_lock:
