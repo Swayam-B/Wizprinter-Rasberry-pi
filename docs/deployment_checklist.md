@@ -70,6 +70,12 @@ Until that contract exists, treat rollout as manual:
 | `WIZPRINTER_API_URL` | Backend base URL | `http://localhost:8000` |
 | `FIREBASE_API_KEY` | Firebase Auth REST key | *(required)* |
 | `A11Y_TTS` | Enable text-to-speech at startup | `0` |
+| `A11Y_TTS_ENGINE` | TTS engine: `auto` / `piper` / `pico` / `espeak` | `auto` |
+| `A11Y_TTS_VOICE` | Voice override (e.g. `en-us+f3` espeak, `en-US` pico) | *(engine default)* |
+| `A11Y_TTS_RATE` | espeak speech rate (words/min; lower = clearer) | `150` |
+| `A11Y_PIPER_MODEL` | Path to a Piper `.onnx` voice (required for `piper`) | *(unset)* |
+| `A11Y_TOUCH_SPEAK` | Two-tap: 1st tap speaks a control, 2nd activates | `1` |
+| `A11Y_ARM_TIMEOUT_SEC` | Seconds a first-tap stays "armed" | `6` |
 | `A11Y_HIGH_CONTRAST` | Enable high-contrast palette at startup | `0` |
 | `A11Y_FONT_SCALE` | Multiply all font sizes | `1.0` |
 | `WIZPRINTER_MOCK_HARDWARE` | Fake scanner/printer for dev/CI | `0` |

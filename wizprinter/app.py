@@ -77,6 +77,11 @@ class WizPrinterApp(App):
         # Navigation history stack — enables true "go back" semantics
         self._nav_stack: list[str] = []
 
+        # Explore-by-touch: first tap speaks a control, second tap activates it
+        # (only active while TTS is enabled).
+        from wizprinter.accessibility import a11y
+        a11y.install_touch_speech()
+
         return sm
 
     # ── Navigation ────────────────────────────────────────────────────────────

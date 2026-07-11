@@ -36,7 +36,10 @@ def _is_transient(exc: BaseException) -> bool:
     if isinstance(exc, requests.HTTPError):
         resp = getattr(exc, "response", None)
         if resp is not None:
-            return resp.status_code in (408, 429, 500, 502, 503, 504)
+            # NB: 429 is deliberately NOT retried — when the server says "slow
+            # down", retrying 5× with backoff only amplifies load and, on a
+            # metered endpoint, cost. Surface it and let the caller/limiter wait.
+            return resp.status_code in (408, 500, 502, 503, 504)
     return False
 
 
@@ -108,11 +111,15 @@ class _RateLimiter:
 
 
 _limiter = _RateLimiter()
-_limiter.register("grade_submit",  max_calls=3, window_sec=60.0)
-_limiter.register("poll_batch",    max_calls=1, window_sec=8.0)
-_limiter.register("poll_session",  max_calls=1, window_sec=8.0)
-_limiter.register("update_check",  max_calls=1, window_sec=300.0)
-_limiter.register("remote_config", max_calls=1, window_sec=300.0)
+_limiter.register("grade_submit",  max_calls=3,  window_sec=60.0)
+_limiter.register("poll_batch",    max_calls=1,  window_sec=8.0)
+_limiter.register("poll_session",  max_calls=1,  window_sec=8.0)
+_limiter.register("update_check",  max_calls=1,  window_sec=300.0)
+_limiter.register("remote_config", max_calls=1,  window_sec=300.0)
+# Guard the other cost/abuse-sensitive entry points too:
+_limiter.register("login",         max_calls=5,  window_sec=60.0)   # Firebase auth
+_limiter.register("exam_pdf",      max_calls=6,  window_sec=60.0)   # question-PDF egress
+_limiter.register("graded_pdf",    max_calls=10, window_sec=60.0)   # graded-PDF egress
 
 
 class RateLimitedError(Exception):
@@ -203,6 +210,7 @@ def firebase_sign_in(email: str, password: str) -> dict:
     """
     if not FIREBASE_API_KEY:
         raise RuntimeError("FIREBASE_API_KEY not set in environment.")
+    _assert_rate_limit("login")   # throttle repeated sign-in attempts
     url = (
         "https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword"
         f"?key={FIREBASE_API_KEY}"
@@ -264,6 +272,7 @@ def get_exam(exam_id: str) -> dict:
 
 
 def download_exam_question_pdf(exam_id: str, dest_path: str) -> None:
+    _assert_rate_limit("exam_pdf")   # stop tap-spam re-downloading the same PDF
     dest_abs = _safe_abspath(dest_path, allowed_prefix=os.path.abspath("temp"))
     os.makedirs(os.path.dirname(dest_abs), exist_ok=True)
     r = _request_with_backoff(
@@ -278,19 +287,22 @@ def submit_grading_session(exam_id: str, class_id: str, pdf_path: str) -> dict:
     _assert_rate_limit("grade_submit")
     safe_pdf = _safe_abspath(pdf_path, allowed_prefix=os.path.abspath("temp"))
 
-    def once():
-        with open(safe_pdf, "rb") as f:
-            resp = requests.post(
-                f"{BASE_URL}/api/exams/{exam_id}/grade",
-                headers=_headers(),
-                data={"class_id": class_id},
-                files={"file": (os.path.basename(safe_pdf), f, "application/pdf")},
-                timeout=60,
-            )
-        resp.raise_for_status()
-        return resp.json()
-
-    return _call_with_backoff(once)
+    # Single attempt on purpose: grading is the expensive AI/OCR operation and
+    # this POST is NOT idempotent. Auto-retrying an ambiguous failure (timeout /
+    # 5xx after the server already accepted the upload) would enqueue a second
+    # grading job for the same PDF and double-charge. The user can retry
+    # manually from the error popup. Add a client idempotency key here once the
+    # backend supports one, then it's safe to re-enable _call_with_backoff.
+    with open(safe_pdf, "rb") as f:
+        resp = requests.post(
+            f"{BASE_URL}/api/exams/{exam_id}/grade",
+            headers=_headers(),
+            data={"class_id": class_id},
+            files={"file": (os.path.basename(safe_pdf), f, "application/pdf")},
+            timeout=60,
+        )
+    resp.raise_for_status()
+    return resp.json()
 
 
 def get_batch_status(batch_id: str) -> dict:
@@ -310,6 +322,7 @@ def get_session_status(session_id: str) -> dict:
 
 
 def download_graded_pdf(url: str, dest_path: str):
+    _assert_rate_limit("graded_pdf")
     dest_abs = _safe_abspath(dest_path, allowed_prefix=os.path.abspath("temp"))
     os.makedirs(os.path.dirname(dest_abs), exist_ok=True)
     resp = _request_with_backoff("get", url, timeout=60)
