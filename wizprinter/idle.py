@@ -10,9 +10,9 @@ open. This monitor watches for touch activity on the Kivy Window and enforces:
     (auto-logout) and the kiosk returns to the landing screen. Default timings
     give the user 60s + 30s = 90s of grace before a forced logout.
 
-  * While signed out — after IDLE_WARNING_SEC of no touch on any non-landing
-    screen (e.g. left on the login/Wi-Fi screen), the kiosk quietly returns to
-    the landing screen. There's no session to warn about, so no countdown.
+  * While signed out — the watchdog does nothing. The pre-login screens
+    (landing, login, Wi-Fi) are never interrupted by a warning, countdown, or
+    forced navigation, since there is no session to protect.
 
 A screen actively showing its grading/print overlay (`show_success` True) counts
 as activity, so a long backend job running without touches is never interrupted.
@@ -71,10 +71,18 @@ class IdleMonitor:
     # ── Touch handling ────────────────────────────────────────────────────────
 
     def _on_touch(self, window, touch):
-        # Any touch anywhere counts as activity and cancels a pending warning.
-        self._last_activity = time.monotonic()
+        # While the logout warning is showing, a tap on the "Log out" button
+        # logs the user out; a tap anywhere else means "stay" (the whole point
+        # of "touch anywhere to stay"). Otherwise any touch is just activity.
         if self._warning is not None:
+            logout_btn = self._warning.get("logout_btn")
+            if logout_btn is not None and self._touch_in_widget(logout_btn, touch):
+                self._logout()
+                return True   # consume — we handled it
+            self._last_activity = time.monotonic()
             self._cancel_warning()
+            return False
+        self._last_activity = time.monotonic()
         return False   # never consume — just observe
 
     # ── Watchdog tick ─────────────────────────────────────────────────────────
@@ -96,12 +104,10 @@ class IdleMonitor:
 
         from wizprinter.session import session_mgr
         if not session_mgr.is_valid:
-            # Signed out: no session to protect. Quietly return to landing.
+            # Signed out: nothing to protect. The pre-login screens (landing,
+            # login, Wi-Fi) must NOT be interrupted by the idle warning/logout.
             if self._warning is not None:
                 self._cancel_warning()
-            if name != "landing" and idle >= IDLE_WARNING_SEC:
-                logger.info("Idle %.0fs (signed out) → returning to landing", idle)
-                self._to_landing()
             return
 
         # Signed in: warn, then log out if the countdown expires.
@@ -132,24 +138,35 @@ class IdleMonitor:
         content = BoxLayout(orientation="vertical", padding=dp(16), spacing=dp(12))
         msg = Label(
             text="", font_size="15sp", halign="center", valign="middle",
-            text_size=(dp(360), None), color=(1, 1, 1, 1),
+            text_size=(dp(380), None), color=(1, 1, 1, 1),
         )
         content.add_widget(msg)
-        stay_btn = Button(
-            text="I'm still here", size_hint_y=None, height=dp(48),
-            font_size="14sp", background_color=(0.08, 0.5, 0.9, 1),
+
+        btn_row = BoxLayout(orientation="horizontal", size_hint_y=None,
+                            height=dp(48), spacing=dp(10))
+        logout_btn = Button(
+            text="Log out", font_size="14sp", background_color=(0.9, 0.3, 0.2, 1),
         )
-        # Any touch already cancels via _on_touch; the button is just an obvious
-        # affordance and does the same thing.
+        stay_btn = Button(
+            text="I'm still here", font_size="14sp",
+            background_color=(0.08, 0.5, 0.9, 1),
+        )
+        btn_row.add_widget(logout_btn)
+        btn_row.add_widget(stay_btn)
+        content.add_widget(btn_row)
+
+        # Primary handling is in _on_touch (so "touch anywhere" stays, and a tap
+        # on Log Out logs out regardless of TTS two-tap). These bindings are a
+        # harmless fallback.
         stay_btn.bind(on_release=lambda *a: self._reset_and_cancel())
-        content.add_widget(stay_btn)
+        logout_btn.bind(on_release=lambda *a: self._logout())
 
         popup = Popup(
             title="Are you still there?", content=content,
-            size_hint=(None, None), size=(dp(420), dp(230)),
+            size_hint=(None, None), size=(dp(440), dp(240)),
             auto_dismiss=False,
         )
-        self._warning = {"popup": popup, "label": msg}
+        self._warning = {"popup": popup, "label": msg, "logout_btn": logout_btn}
         popup.open()
 
         try:
@@ -206,3 +223,13 @@ class IdleMonitor:
             return name, root.get_screen(name)
         except Exception:
             return name, None
+
+    @staticmethod
+    def _touch_in_widget(widget, touch) -> bool:
+        """True if a window-space touch falls within *widget* (no scaling)."""
+        try:
+            wx, wy = widget.to_window(widget.x, widget.y)
+        except Exception:
+            return False
+        return (wx <= touch.x <= wx + widget.width and
+                wy <= touch.y <= wy + widget.height)

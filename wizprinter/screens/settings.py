@@ -25,6 +25,25 @@ import wizprinter.api_client as api
 
 logger = logging.getLogger(__name__)
 
+
+class _SafeSpinner(Spinner):
+    """
+    Spinner that won't crash the app if it's tapped while detached from the
+    window.
+
+    Kivy raises "Cannot open a dropdown list on a hidden widget" if the dropdown
+    is opened when the spinner has no root window — which happens when the host
+    popup has been dismissed (or the app is shutting down) with a touch still in
+    flight. We simply skip opening in that case instead of letting it crash the
+    kiosk.
+    """
+
+    def _toggle_dropdown(self, *args):
+        if self.get_root_window() is None:
+            return
+        return super()._toggle_dropdown(*args)
+
+
 TIMEZONES = [
     "America/New_York", "America/Chicago", "America/Denver",
     "America/Los_Angeles", "America/Anchorage", "Pacific/Honolulu",
@@ -148,7 +167,7 @@ class SettingsScreen(Screen):
             size_hint_y=None, height=dp(28), font_size="12sp",
             color=(0.7, 0.85, 1, 1),
         ))
-        tz_spinner = Spinner(
+        tz_spinner = _SafeSpinner(
             text=current if current in TIMEZONES else TIMEZONES[0],
             values=TIMEZONES, size_hint_y=None, height=dp(44), font_size="13sp",
         )

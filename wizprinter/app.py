@@ -97,6 +97,25 @@ class WizPrinterApp(App):
     def on_start(self):
         self.idle_monitor.start()
         self.update_manager.start(self._on_update_available)
+        self._maybe_show_test_update()
+
+    def _maybe_show_test_update(self):
+        # ─────────────────────────────────────────────────────────────────────
+        # TEMPORARY (testing only): pop a fake "Update Available" dialog shortly
+        # after launch so the update UI can be exercised without a backend.
+        # Controlled by WIZPRINTER_FAKE_UPDATE (default on). Set it to "0" to
+        # disable, and REMOVE this method + its call before production.
+        # ─────────────────────────────────────────────────────────────────────
+        if os.environ.get("WIZPRINTER_FAKE_UPDATE", "1") != "1":
+            return
+        from kivy.clock import Clock
+        fake_info = {
+            "version": "2.6.0",
+            "notes": "Test build — this is a simulated update for UI testing.",
+            "mandatory": False,
+        }
+        logger.warning("WIZPRINTER_FAKE_UPDATE active — showing a simulated update popup")
+        Clock.schedule_once(lambda dt: self._on_update_available(fake_info), 2.5)
 
     def on_stop(self):
         # Clean up the background schedulers on shutdown.

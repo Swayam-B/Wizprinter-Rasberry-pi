@@ -2,6 +2,7 @@
 
 import logging
 
+import requests
 from kivy.uix.screenmanager import Screen
 from kivy.app import App
 from kivy.properties import BooleanProperty, StringProperty
@@ -100,12 +101,23 @@ class LoginScreen(Screen):
                 body = ""
             msg = f"{msg} {body}"
 
+        is_timeout = (
+            isinstance(exc, (requests.Timeout, requests.ConnectionError))
+            or "timed out" in msg.lower()
+            or "timeout" in msg.lower()
+        )
+
         if "INVALID_LOGIN_CREDENTIALS" in msg or "INVALID_PASSWORD" in msg:
             self.status_text = "Invalid email or password."
             a11y.speak("Login failed. Invalid email or password.")
         elif "EMAIL_NOT_FOUND" in msg:
             self.status_text = "Email not registered."
             a11y.speak("Login failed. That email address is not registered.")
+        elif is_timeout:
+            # Scale-to-zero backend cold start: the request above just woke it,
+            # so a second attempt in a few seconds should be fast.
+            self.status_text = "Server is waking up. Tap Sign In again."
+            a11y.speak("The server is starting up. Please tap Sign In again in a few seconds.")
         else:
             self.status_text = "Login failed. Check your connection."
             a11y.speak("Login failed. Please check your internet connection.")

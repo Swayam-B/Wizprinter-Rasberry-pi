@@ -29,6 +29,12 @@ _RETRY_MAX      = max(1, int(os.environ.get("API_RETRY_MAX_ATTEMPTS", "5")))
 _RETRY_BASE_SEC = float(os.environ.get("API_RETRY_BASE_SEC",          "0.5"))
 _RETRY_CAP_SEC  = float(os.environ.get("API_RETRY_MAX_SLEEP_SEC",     "30"))
 
+# Read timeout for the first post-login backend call. The login path does NOT
+# retry (see _request_once), so this is a single fail-fast wait: long enough for
+# a warm/slightly-slow backend to answer, short enough that a cold-starting
+# container bails quickly and asks the user to tap Sign In again.
+ONBOARD_TIMEOUT_SEC = float(os.environ.get("API_ONBOARD_TIMEOUT_SEC", "20"))
+
 
 def _is_transient(exc: BaseException) -> bool:
     if isinstance(exc, (requests.Timeout, requests.ConnectionError)):
@@ -65,6 +71,21 @@ def _request_with_backoff(method: str, url: str, **kwargs) -> requests.Response:
         r.raise_for_status()
         return r
     return _call_with_backoff(once)
+
+
+def _request_once(method: str, url: str, **kwargs) -> requests.Response:
+    """
+    Single attempt, no retry/backoff.
+
+    Used for the login path (sign-in + onboard). The backend can scale to zero
+    and cold-start, so retrying only makes the user wait through a long storm
+    (5 x timeout). Instead we try once and fail fast; the first request wakes the
+    container, and the caller shows a "server is starting up, tap Sign In again"
+    message so the user's next tap hits a warm backend.
+    """
+    r = requests.request(method, url, **kwargs)
+    r.raise_for_status()
+    return r
 
 
 # ── Per-endpoint rate limiter ─────────────────────────────────────────────────
@@ -230,7 +251,7 @@ def firebase_sign_in(email: str, password: str) -> dict:
         "https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword"
         f"?key={FIREBASE_API_KEY}"
     )
-    resp = _request_with_backoff(
+    resp = _request_once(   # single attempt — fail fast, no retry storm
         "post",
         url,
         json={"email": email, "password": password, "returnSecureToken": True},
@@ -240,11 +261,15 @@ def firebase_sign_in(email: str, password: str) -> dict:
 
 
 def onboard_professor() -> dict:
-    return _request_with_backoff(
+    # First call to our backend right after sign-in — this is where a
+    # scale-to-zero container cold start hits. Single attempt (no retry): if it's
+    # slow, fail fast and let the login screen tell the user to tap Sign In again
+    # (by then the container this request woke up is warm).
+    return _request_once(
         "post",
         f"{BASE_URL}/api/professors/onboard",
         headers=_headers(),
-        timeout=20,
+        timeout=ONBOARD_TIMEOUT_SEC,
     ).json()
 
 
