@@ -25,7 +25,6 @@ from wizprinter.grading import GradeOutputMode
 from wizprinter.screens.grading_status import GradingStatusMixin
 from wizprinter.utils.image_file import is_valid_jpeg
 from wizprinter.utils.pdf_preview import pdf_to_png_paths
-from wizprinter.utils.printer import PrinterManager
 
 
 # ── Popup helper ──────────────────────────────────────────────────────────────
@@ -72,7 +71,8 @@ class PreviewScreen(GradingStatusMixin, Screen):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.printer = PrinterManager()
+        # Printing is handled by GradingStatusMixin.send_to_printer (CUPS), not a
+        # separate PrinterManager instance.
         self._preview_mode    = "none"   # "scan" | "exam"
         self._exam_row        = None
         self._exam_local_pdf  = ""

@@ -11,6 +11,7 @@ from kivy.lang import Builder
 from kivy.uix.screenmanager import ScreenManager, FadeTransition
 from kivy.core.window import Window
 
+from wizprinter import __version__
 from wizprinter.theme import BG_DARK, SCREEN_W, SCREEN_H
 from wizprinter.screens.landing      import LandingScreen
 from wizprinter.screens.wifi         import WifiScreen
@@ -33,6 +34,8 @@ class WizPrinterApp(App):
     """Main WizPrinter kiosk application."""
 
     title = 'WizPrinter'
+    # Exposed to KV (e.g. Settings footer `app.version`) and the update checker.
+    version = __version__
 
     def build(self):
         Window.size       = (800, 480)
@@ -82,7 +85,32 @@ class WizPrinterApp(App):
         from wizprinter.accessibility import a11y
         a11y.install_touch_speech()
 
+        # Inactivity watchdog + update checker are started in on_start(), once
+        # the Window and Clock are live.
+        from wizprinter.idle import IdleMonitor
+        from wizprinter.updates import UpdateManager
+        self.idle_monitor   = IdleMonitor(self)
+        self.update_manager = UpdateManager()
+
         return sm
+
+    def on_start(self):
+        self.idle_monitor.start()
+        self.update_manager.start(self._on_update_available)
+
+    def on_stop(self):
+        # Clean up the background schedulers on shutdown.
+        if hasattr(self, "idle_monitor"):
+            self.idle_monitor.stop()
+        if hasattr(self, "update_manager"):
+            self.update_manager.stop()
+
+    def _on_update_available(self, info: dict) -> None:
+        """Callback from UpdateManager when a newer build is detected."""
+        from wizprinter.accessibility import a11y
+        from wizprinter.updates import show_update_popup
+        a11y.speak(f"A software update, version {info.get('version', '')}, is available.")
+        show_update_popup(info)
 
     # ── Navigation ────────────────────────────────────────────────────────────
 

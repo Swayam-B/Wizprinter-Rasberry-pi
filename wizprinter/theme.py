@@ -21,12 +21,12 @@ BLACK = [0, 0, 0, 1]
 WHITE = [1, 1, 1, 1]
 TRANSPARENT = [0, 0, 0, 0]
 
-# ─── Dimensions (480x320 kiosk) ─────────────────────────────
+# ─── Dimensions (800x480 kiosk — 7" capacitive touchscreen) ─
 SCREEN_W = 800
 SCREEN_H = 480
 STATUS_BAR_H = 60
 BOTTOM_NAV_H = 48
-TOUCH_TARGET_MIN = 44  # Minimum touch target for resistive screen
+TOUCH_TARGET_MIN = 44  # Minimum comfortable touch target (dp)
 BUTTON_H_LARGE = 80
 BUTTON_H_MEDIUM = 44
 BUTTON_RADIUS = 16

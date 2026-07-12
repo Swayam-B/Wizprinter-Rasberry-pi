@@ -1,3 +1,16 @@
+"""
+Thin CUPS wrapper for one-shot document printing.
+
+`PrinterManager` connects to the local CUPS server (unless WIZPRINTER_MOCK_HARDWARE
+is set, in which case it no-ops with fake success) and exposes `print_document()`,
+which validates the file and destination before submitting a job. The `cups`
+import is guarded so the module stays importable on non-Pi dev machines and CI.
+
+Note: the live grading/print flow uses GradingStatusMixin.send_to_printer for
+its retry/queue behaviour; this class is the simpler standalone helper (and is
+exercised by tests/test_hardware_mock.py).
+"""
+import logging
 import os
 
 from wizprinter.hardware import MOCK_HARDWARE
@@ -7,50 +20,51 @@ try:
 except ImportError:
     cups = None
 
+logger = logging.getLogger(__name__)
+
 
 class PrinterManager:
     def __init__(self):
         self.conn = None
         if MOCK_HARDWARE:
-            print("[Printer] Mock hardware mode — skipping CUPS connection.")
+            logger.info("Mock hardware mode — skipping CUPS connection.")
             return
         if cups is None:
-            print("Hardware Error: pycups not installed.")
+            logger.error("pycups not installed; printing unavailable.")
             return
         try:
             self.conn = cups.Connection()
         except Exception as e:
-            print(f"Hardware Error: Could not connect to CUPS: {e}")
+            logger.error("Could not connect to CUPS: %s", e)
 
     def print_document(self, file_path, printer_name=None):
         if MOCK_HARDWARE:
-            print(f"[Printer] Mock print job: {file_path} -> {printer_name or 'default'}")
+            logger.info("Mock print job: %s -> %s", file_path, printer_name or "default")
             return True
 
         if not self.conn:
-            print("Print failed: No CUPS connection.")
+            logger.error("Print failed: no CUPS connection.")
             return False
 
         if not os.path.exists(file_path):
-            print(f"Print failed: File not found at {file_path}")
+            logger.error("Print failed: file not found at %s", file_path)
             return False
 
         # Use the printer selected by the user, or fall back to CUPS default
         dest = printer_name or self.conn.getDefault()
 
         if not dest or dest not in self.conn.getPrinters():
-            print("Print failed: No valid printer destination found.")
+            logger.error("Print failed: no valid printer destination found.")
             return False
 
         try:
             options = {
                 "media": "na_letter_8.5x11in",
                 "scaling": "100",
-                # "fit-to-page": "true",
             }
             job_id = self.conn.printFile(dest, file_path, "WizPrinter_Job", options)
-            print(f"Job {job_id} sent successfully to {dest}.")
+            logger.info("Job %s sent to %s.", job_id, dest)
             return True
         except Exception as e:
-            print(f"Printing failed: {e}")
+            logger.error("Printing failed: %s", e)
             return False

@@ -67,6 +67,28 @@ def _apply_timezone(tz: str) -> tuple[bool, str]:
 
 
 def _sync_ntp(server: str) -> tuple[bool, str]:
+    """
+    Best-effort network time sync.
+
+    Preferred path is `timedatectl set-ntp true`, which enables the built-in
+    systemd-timesyncd on Raspberry Pi OS (Bookworm) with nothing extra to
+    install — this is what replaces the old "install chrony or ntp" failure.
+    chrony/ntpdate remain as one-shot fallbacks for images that ship them.
+    """
+    # 1) systemd-timesyncd via timedatectl (default on Bookworm — no extra pkg)
+    try:
+        r = subprocess.run(
+            ["sudo", "timedatectl", "set-ntp", "true"],
+            capture_output=True, text=True, timeout=10,
+        )
+        if r.returncode == 0:
+            return True, "Network time sync enabled (systemd-timesyncd)"
+    except (FileNotFoundError, subprocess.TimeoutExpired):
+        pass
+    except Exception as e:
+        return False, str(e)
+
+    # 2) One-shot step via chrony or ntpdate, if present
     for tool, cmd in [
         ("chronyc",  ["sudo", "chronyc", "makestep"]),
         ("ntpdate",  ["sudo", "ntpdate", "-u", server]),
@@ -79,7 +101,7 @@ def _sync_ntp(server: str) -> tuple[bool, str]:
             continue
         except Exception as e:
             return False, str(e)
-    return False, "Could not sync time. Install chrony or ntp."
+    return False, "Could not enable network time sync."
 
 
 def _show_info_popup(title: str, message: str):
@@ -159,19 +181,21 @@ class SettingsScreen(Screen):
 
             def _on_done(ok_tz, msg_tz, ok_ntp, msg_ntp):
                 apply_btn.disabled = False
-                if ok_tz and ok_ntp:
-                    status_lbl.text  = "✓ Applied"
+                # Timezone is the primary action; network time sync is a best-
+                # effort extra and must not fail the whole operation.
+                if ok_tz:
+                    self.current_tz = chosen_tz
+                    if ok_ntp:
+                        status_lbl.text = "✓ Applied"
+                    else:
+                        status_lbl.text = "✓ Timezone set (time sync unavailable)"
                     status_lbl.color = (0.3, 1, 0.5, 1)
-                    self.current_tz  = chosen_tz
                     a11y.speak(f"Time zone set to {chosen_tz}.")
                     Clock.schedule_once(lambda dt: popup.dismiss(), 1.2)
                 else:
-                    msgs = []
-                    if not ok_tz:  msgs.append(f"TZ: {msg_tz}")
-                    if not ok_ntp: msgs.append(f"NTP: {msg_ntp}")
-                    status_lbl.text  = "\n".join(msgs)
+                    status_lbl.text  = f"TZ: {msg_tz}"
                     status_lbl.color = (1, 0.4, 0.4, 1)
-                    a11y.speak("Error applying settings. " + " ".join(msgs))
+                    a11y.speak("Error setting time zone. " + msg_tz)
 
             threading.Thread(target=bg, daemon=True).start()
 

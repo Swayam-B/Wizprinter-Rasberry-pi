@@ -200,6 +200,21 @@ def _headers():
     return {"Authorization": f"Bearer {token}"}
 
 
+def _device_headers() -> dict:
+    """
+    Headers for *device-scoped* fleet endpoints (update checks, remote config).
+
+    These identify the kiosk, not a signed-in user, so they work even at the
+    landing screen with nobody logged in — which is what we want for mass
+    production: a device must be able to learn about (especially mandatory)
+    updates without waiting for a teacher to log in. The device id is an opaque
+    random identifier (see telemetry.get_device_id) — no user credentials and no
+    PII are sent. The backend can key staged rollouts and rate limiting off it.
+    """
+    from wizprinter import telemetry
+    return {"X-Device-Id": telemetry.get_device_id()}
+
+
 # ── Auth ──────────────────────────────────────────────────────────────────────
 
 def firebase_sign_in(email: str, password: str) -> dict:
@@ -331,18 +346,20 @@ def download_graded_pdf(url: str, dest_path: str):
 
 
 def check_for_update() -> dict:
+    # Device-scoped, not user-scoped: runs even when nobody is logged in.
     _assert_rate_limit("update_check")
     return _request_with_backoff(
         "get", f"{BASE_URL}/api/updates/latest",
-        headers=_headers(), timeout=10,
+        headers=_device_headers(), timeout=10,
     ).json()
 
 
 def fetch_remote_config() -> dict:
+    # Device-scoped, not user-scoped: runs even when nobody is logged in.
     _assert_rate_limit("remote_config")
     return _request_with_backoff(
         "get", f"{BASE_URL}/api/config",
-        headers=_headers(), timeout=10,
+        headers=_device_headers(), timeout=10,
     ).json()
 
 

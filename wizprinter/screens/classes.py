@@ -1,10 +1,22 @@
-"""Class selection screen — Semester / Subject / Class dropdowns."""
+"""
+Class-selection screen.
+
+Three dependent dropdowns — Semester → Subject → Class — each populated from the
+backend as the previous one is chosen (see api_client.get_semesters/subjects/
+classes). The chosen ids are stashed in api_client's selection state and consumed
+downstream by the Documents/Preview grading flow. `navigation_mode` decides
+whether "select" continues to the scan flow or the documents (exam) list.
+"""
+
+import logging
 
 from kivy.uix.screenmanager import Screen
 from kivy.app import App
 from kivy.properties import ListProperty, StringProperty
 
 import wizprinter.api_client as api
+
+logger = logging.getLogger(__name__)
 
 
 class ClassesScreen(Screen):
@@ -38,7 +50,7 @@ class ClassesScreen(Screen):
         )
 
     def _set_error(self, which, exc):
-        print(f"{which} load failed:", exc)
+        logger.warning("%s load failed: %s", which, exc)
         if which == "semesters":
             self.semesters = ["Error — tap back and retry"]
         elif which == "subjects":
@@ -97,7 +109,7 @@ class ClassesScreen(Screen):
     def select_class(self):
         sel = api.get_selection()
         if not all([sel["semester_id"], sel["subject_id"], sel["class_id"]]):
-            print("Please select semester, subject, and class before continuing.")
+            logger.info("Class selection incomplete; ignoring continue tap.")
             return
 
         app = App.get_running_app()

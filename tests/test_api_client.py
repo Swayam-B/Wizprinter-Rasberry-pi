@@ -108,6 +108,37 @@ class TestSafeAbspath:
             api._safe_abspath(str(sibling / "file.pdf"), allowed_prefix=str(allowed))
 
 
+class TestDeviceScopedUpdateCheck:
+    """Update/config checks must be device-scoped, not user-scoped: they carry a
+    device id, never a user token, and work with nobody logged in."""
+
+    def test_device_headers_have_id_and_no_auth(self):
+        headers = api._device_headers()
+        assert headers.get("X-Device-Id")
+        assert "Authorization" not in headers
+
+    def test_check_for_update_works_without_login(self, monkeypatch):
+        api.session_mgr.clear()          # ensure no token present
+        captured = {}
+
+        class _Resp:
+            def json(self):
+                return {"version": "9.9.9"}
+
+        def fake_request(method, url, **kwargs):
+            captured["headers"] = kwargs.get("headers", {})
+            return _Resp()
+
+        # Bypass the 5-minute rate limiter for a deterministic test.
+        monkeypatch.setattr(api, "_assert_rate_limit", lambda key: None)
+        monkeypatch.setattr(api, "_request_with_backoff", fake_request)
+
+        result = api.check_for_update()          # must NOT raise "please log in"
+        assert result == {"version": "9.9.9"}
+        assert captured["headers"].get("X-Device-Id")
+        assert "Authorization" not in captured["headers"]
+
+
 class TestSelectionState:
     def test_set_and_get_selection_roundtrip(self):
         api.set_selection(semester_id="sem1", subject_id="sub1", class_id="cls1", exam_id="ex1")

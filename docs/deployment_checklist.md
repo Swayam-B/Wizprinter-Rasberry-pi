@@ -81,6 +81,8 @@ Until that contract exists, treat rollout as manual:
 | `A11Y_ARM_TIMEOUT_SEC` | Seconds a first-tap stays "armed" | `6` |
 | `A11Y_HIGH_CONTRAST` | Enable high-contrast palette at startup | `0` |
 | `A11Y_FONT_SCALE` | Multiply all font sizes | `1.0` |
+| `KIOSK_IDLE_TO_LANDING_SEC` | Idle seconds before returning to landing | `60` |
+| `KIOSK_LANDING_TO_LOGOUT_SEC` | Extra idle seconds on landing before auto-logout | `60` |
 | `WIZPRINTER_MOCK_HARDWARE` | Fake scanner/printer for dev/CI | `0` |
 | `WIZPRINTER_ADMIN_PIN` | Require a PIN before Settings → Log Out | *(unset = disabled)* |
 | `LOG_DIR` | Rotating log + telemetry file location | `logs` |

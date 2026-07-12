@@ -1,7 +1,16 @@
 #!/usr/bin/env python3
 """
-WizPrinter Kiosk Application
-Raspberry Pi 3.5" Touchscreen (800x480) Self-Service Printing Kiosk
+WizPrinter Kiosk — application entry point.
+
+Boots the Raspberry Pi self-service grading/printing kiosk on a 7" 800x480
+touchscreen. Responsibilities, in order:
+  1. Load environment (.env) and configure logging before any other import.
+  2. Apply accessibility patches (high-contrast / font scale) before KV loads.
+  3. Set Kivy graphics config (fullscreen, fixed 800x480) before importing kivy.
+  4. Record a startup heartbeat, run the app, and record any crash on the way out.
+
+Process restart on crash is handled by the systemd unit (Restart=always), not
+here — see docs/deployment_checklist.md.
 """
 
 import os
