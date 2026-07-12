@@ -1,8 +1,10 @@
 """Settings screen — network config (no re-login loop), time/region, logout."""
 
 import logging
+import os
 import subprocess
 import threading
+import time
 
 from kivy.app import App
 from kivy.clock import Clock
@@ -56,6 +58,13 @@ def _apply_timezone(tz: str) -> tuple[bool, str]:
             capture_output=True, text=True, timeout=10,
         )
         if r.returncode == 0:
+            # timedatectl updates /etc/localtime, but this long-running process
+            # cached the timezone at startup — so datetime.now() (the dashboard
+            # clock) would keep showing the OLD zone. Re-point the process's TZ
+            # and re-read it so the change is visible immediately.
+            os.environ["TZ"] = tz
+            if hasattr(time, "tzset"):
+                time.tzset()
             return True, f"Timezone set to {tz}"
         return False, r.stderr.strip() or "Failed to set timezone."
     except FileNotFoundError:

@@ -14,7 +14,7 @@ top-level [`kv/`](../kv/) folder.
 | `api_client.py` | All backend/Firebase HTTP calls, retry/backoff, per-endpoint rate limiting, and path-traversal-safe file download/upload. |
 | `grading.py` | Pure grading domain logic: output modes, confidence flagging, review state, and client-side grouping. No Kivy dependency. |
 | `hardware.py` | Single switch (`MOCK_HARDWARE`) that fakes scanner/printer for dev/CI. |
-| `idle.py` | Inactivity watchdog: idle → landing screen → auto-logout. |
+| `idle.py` | Inactivity watchdog: idle → 30s logout-warning countdown → auto-logout + landing. |
 | `logger.py` | Rotating-file + console logging setup; call `setup_logging()` once at startup. |
 | `session.py` | Firebase ID-token holder with automatic silent refresh; keeps tokens in memory only. |
 | `telemetry.py` | Local heartbeat/crash logging plus a best-effort remote beacon. |
