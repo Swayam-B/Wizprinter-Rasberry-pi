@@ -106,7 +106,7 @@ class WizPrinterApp(App):
         # Controlled by WIZPRINTER_FAKE_UPDATE (default on). Set it to "0" to
         # disable, and REMOVE this method + its call before production.
         # ─────────────────────────────────────────────────────────────────────
-        if os.environ.get("WIZPRINTER_FAKE_UPDATE", "1") != "1":
+        if os.environ.get("WIZPRINTER_FAKE_UPDATE", "0") != "1":
             return
         from kivy.clock import Clock
         fake_info = {
