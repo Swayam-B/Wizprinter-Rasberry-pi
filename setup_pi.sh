@@ -38,6 +38,7 @@ apt-get install -y --no-install-recommends \
     espeak-ng \
     libttspico-utils \
     alsa-utils \
+    pulseaudio-utils \
     python3-venv \
     git
 
@@ -82,6 +83,26 @@ sudo -u "$SYS_USER" bash -c '
     env/bin/pip install -r requirements.txt --quiet
     echo "Python dependencies installed."
 '
+
+# ── Phase 5b: Piper neural TTS voice (accessibility) ──────────────────────────
+# Recommended, natural-sounding offline voice. Best-effort: a failure here must
+# not abort provisioning — the app falls back to Pico/espeak automatically.
+echo "--- Phase 5b: Piper TTS voice ---"
+sudo -u "$SYS_USER" bash -c '
+    set -uo pipefail
+    cd "$(dirname "$(realpath "$0")")" 2>/dev/null || cd "$HOME"
+    env/bin/pip install piper-tts --quiet || { echo "WARNING: piper-tts install failed; will fall back to Pico/espeak" >&2; exit 0; }
+
+    mkdir -p voices
+    base="https://huggingface.co/rhasspy/piper-voices/resolve/main/en/en_US/amy/medium"
+    for f in en_US-amy-medium.onnx en_US-amy-medium.onnx.json; do
+        if [ ! -f "voices/$f" ]; then
+            echo "Downloading Piper voice: $f"
+            curl -fsSL "$base/$f?download=true" -o "voices/$f" \
+                || { echo "WARNING: could not download $f; falling back to Pico/espeak" >&2; rm -f "voices/$f"; }
+        fi
+    done
+' || true
 
 # ── Phase 6: Verify critical tools ────────────────────────────────────────────
 echo "--- Phase 6: Verification ---"

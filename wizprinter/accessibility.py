@@ -18,20 +18,30 @@ Usage
     # Once, at app startup (after the Kivy app is built):
     a11y.install_touch_speech()
 
-Voice quality
+Voice quality & engine
+----------------------
+Preference order (engine="auto"): Piper → Pico → espeak-ng.
+
+  • Piper (recommended) — neural, natural, runs offline on the Pi CPU in real
+    time. Best fit for this kiosk. `setup_pi.sh` installs it and downloads a
+    default voice into ./voices/, which is auto-discovered. To set up by hand:
+        pip install piper-tts
+        # download BOTH files for a voice, e.g. en_US-amy-medium:
+        #   voices/en_US-amy-medium.onnx  and  voices/en_US-amy-medium.onnx.json
+    Kokoro / F5-TTS / ChatTTS were considered but are GPU/desktop-class and too
+    heavy for a Pi; Piper is the right neural engine here.
+
+  • Pico (fallback) — small, clearer than espeak:  apt install libttspico-utils
+  • espeak-ng (last resort) — always present, robotic but intelligible.
+
+Audio routing
 -------------
-espeak-ng is intelligible but robotic. For a much clearer voice, install one
-of these on the Pi and it is picked up automatically (engine="auto"):
+All engines synthesise to a WAV and play it via paplay/pw-play (PipeWire) so it
+reaches the *default sink* — e.g. a Bluetooth speaker. Plain `aplay` (raw ALSA)
+is only a last resort because it can land on the wrong output (HDMI) and be
+silent. Override the player with A11Y_AUDIO_PLAYER if needed.
 
-    # Option A — SVOX Pico (small, natural, easy):
-    sudo apt-get install -y libttspico-utils alsa-utils
-
-    # Option B — Piper (neural, best quality, offline):
-    #   pip install piper-tts   (or download the binary)
-    #   download a voice model, e.g. en_US-amy-medium.onnx, then set
-    #   A11Y_TTS_ENGINE=piper and A11Y_PIPER_MODEL=/path/to/en_US-amy-medium.onnx
-
-Select explicitly with A11Y_TTS_ENGINE = auto | piper | pico | espeak.
+Select the engine explicitly with A11Y_TTS_ENGINE = auto | piper | pico | espeak.
 """
 
 from __future__ import annotations
@@ -40,6 +50,7 @@ import logging
 import os
 import shutil
 import subprocess
+import sys
 import tempfile
 import threading
 import weakref
@@ -63,8 +74,18 @@ TTS_ENGINE: str = os.environ.get("A11Y_TTS_ENGINE", "auto").strip().lower()
 TTS_RATE:  int = int(os.environ.get("A11Y_TTS_RATE", "140"))    # words/minute
 TTS_PITCH: int = int(os.environ.get("A11Y_TTS_PITCH", "42"))    # 0-99, lower=deeper
 TTS_VOICE: str = os.environ.get("A11Y_TTS_VOICE", "").strip()
-# Piper (neural) model path — required when engine resolves to "piper".
+# Piper (neural, best on a Pi). PIPER_MODEL points at a .onnx voice; if unset we
+# auto-discover the first .onnx under ./voices/. PIPER_BIN overrides the CLI name.
 PIPER_MODEL: str = os.environ.get("A11Y_PIPER_MODEL", "").strip()
+PIPER_BIN:   str = os.environ.get("A11Y_PIPER_BIN", "piper").strip()
+DEFAULT_VOICES_DIR = os.path.abspath("voices")
+
+# All engines synthesise to a WAV and play it through one of these, in order.
+# paplay/pw-play go through PipeWire/PulseAudio → the *default sink* (e.g. a
+# Bluetooth speaker); aplay talks to raw ALSA and can land on the wrong output
+# (HDMI) — so it's only the last resort. Override with A11Y_AUDIO_PLAYER.
+AUDIO_PLAYER: str = os.environ.get("A11Y_AUDIO_PLAYER", "").strip()
+_PLAYER_PREFERENCE = ("paplay", "pw-play", "aplay")
 
 # ── Explore-by-touch configuration ────────────────────────────────────────────
 # When TTS is on, the first tap on a control speaks its label instead of
@@ -160,40 +181,64 @@ class _Accessibility:
                     pass
 
     def _launch(self, text: str) -> tuple[subprocess.Popen, str | None]:
-        """Start the synthesiser/player. Returns (process, temp_wav_or_None)."""
+        """
+        Synthesise *text* to a temp WAV, then start a player for it.
+
+        Every engine goes through the same player selection so audio always
+        lands on the PipeWire/PulseAudio default sink (the Boom), never straight
+        on raw-ALSA HDMI. Returns (player_process, temp_wav) for interrupt+cleanup.
+        """
         engine = self._engine()
         devnull = subprocess.DEVNULL
+        wav = self._mktemp_wav()
+        try:
+            if engine == "piper":
+                subprocess.run(
+                    [self._piper_bin(), "-m", self._piper_model(), "-f", wav],
+                    input=text.encode("utf-8"),
+                    stdout=devnull, stderr=devnull, check=True,
+                )
+            elif engine == "pico":
+                subprocess.run(
+                    ["pico2wave", "-l", TTS_VOICE or "en-US", "-w", wav, text],
+                    stdout=devnull, stderr=devnull, check=True,
+                )
+            else:  # espeak
+                subprocess.run(
+                    [
+                        "espeak-ng",
+                        "-s", str(TTS_RATE),     # slower = clearer
+                        "-p", str(TTS_PITCH),    # lower, not pitched-up
+                        "-a", "200",             # louder
+                        "-g", "6",               # word gap for separation
+                        "-v", TTS_VOICE or "en-us",
+                        "-w", wav, "--", text,
+                    ],
+                    stdout=devnull, stderr=devnull, check=True,
+                )
+        except BaseException:
+            # Synthesis failed — don't leak the temp file.
+            try:
+                os.remove(wav)
+            except OSError:
+                pass
+            raise
 
-        if engine == "espeak":
-            cmd = [
-                "espeak-ng",
-                "-s", str(TTS_RATE),     # slower = clearer
-                "-p", str(TTS_PITCH),    # lower, not pitched-up
-                "-a", "200",             # louder
-                "-g", "6",               # word gap for separation
-                "-v", TTS_VOICE or "en-us",
-                "--", text,
-            ]
-            return subprocess.Popen(cmd, stdout=devnull, stderr=devnull), None
+        player = self._play_cmd(wav)
+        return subprocess.Popen(player, stdout=devnull, stderr=devnull), wav
 
-        if engine == "pico":
-            wav = self._mktemp_wav()
-            lang = TTS_VOICE or "en-US"
-            subprocess.run(
-                ["pico2wave", "-l", lang, "-w", wav, text],
-                stdout=devnull, stderr=devnull, check=True,
-            )
-            return subprocess.Popen(["aplay", "-q", wav], stdout=devnull, stderr=devnull), wav
-
-        if engine == "piper":
-            wav = self._mktemp_wav()
-            subprocess.run(
-                ["piper", "--model", PIPER_MODEL, "--output_file", wav],
-                input=text.encode("utf-8"), stdout=devnull, stderr=devnull, check=True,
-            )
-            return subprocess.Popen(["aplay", "-q", wav], stdout=devnull, stderr=devnull), wav
-
-        raise RuntimeError(f"Unknown TTS engine: {engine}")
+    @staticmethod
+    def _play_cmd(wav: str) -> list[str]:
+        """Choose a WAV player that routes to the default (PipeWire) sink."""
+        candidates = [AUDIO_PLAYER] if AUDIO_PLAYER else list(_PLAYER_PREFERENCE)
+        for name in candidates:
+            if name and shutil.which(name):
+                # aplay is quieter about headers with -q; the others take a path.
+                return [name, "-q", wav] if name == "aplay" else [name, wav]
+        raise FileNotFoundError(
+            "No WAV player found (tried: %s). Install pulseaudio-utils or alsa-utils."
+            % ", ".join(c for c in candidates if c)
+        )
 
     def _engine(self) -> str:
         """Resolve and cache which engine to use."""
@@ -201,14 +246,46 @@ class _Accessibility:
             return self._resolved_engine
         if TTS_ENGINE in ("espeak", "pico", "piper"):
             self._resolved_engine = TTS_ENGINE
-        elif shutil.which("piper") and PIPER_MODEL and os.path.exists(PIPER_MODEL):
+        elif self._piper_bin() and self._piper_model():
             self._resolved_engine = "piper"
-        elif shutil.which("pico2wave") and shutil.which("aplay"):
+        elif shutil.which("pico2wave"):
             self._resolved_engine = "pico"
         else:
             self._resolved_engine = "espeak"
         logger.info("TTS engine resolved to '%s'", self._resolved_engine)
         return self._resolved_engine
+
+    @staticmethod
+    def _piper_bin() -> str:
+        """Resolve the piper CLI — on PATH, an explicit path, or in the venv."""
+        if (os.sep in PIPER_BIN or (os.altsep and os.altsep in PIPER_BIN)) \
+                and os.path.exists(PIPER_BIN):
+            return PIPER_BIN
+        found = shutil.which(PIPER_BIN)
+        if found:
+            return found
+        # Installed into the same venv as the running interpreter (systemd runs
+        # env/bin/python, so env/bin is usually NOT on PATH).
+        venv_dir = os.path.dirname(sys.executable)
+        for cand in (os.path.join(venv_dir, PIPER_BIN),
+                     os.path.join(venv_dir, PIPER_BIN + ".exe")):
+            if os.path.exists(cand):
+                return cand
+        return ""
+
+    @staticmethod
+    def _piper_model() -> str:
+        """Explicit A11Y_PIPER_MODEL, else the first .onnx voice under ./voices/."""
+        if PIPER_MODEL and os.path.exists(PIPER_MODEL):
+            return PIPER_MODEL
+        try:
+            if os.path.isdir(DEFAULT_VOICES_DIR):
+                for name in sorted(os.listdir(DEFAULT_VOICES_DIR)):
+                    if name.endswith(".onnx"):
+                        return os.path.join(DEFAULT_VOICES_DIR, name)
+        except OSError:
+            pass
+        return ""
 
     @staticmethod
     def _mktemp_wav() -> str:

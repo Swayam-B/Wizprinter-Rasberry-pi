@@ -53,3 +53,6 @@ __pycache__/
 *.pyc
 temp/
 test.jpg
+
+# Downloaded Piper TTS voice models (fetched by setup_pi.sh)
+voices/
