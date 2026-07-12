@@ -51,9 +51,9 @@ class LoginScreen(Screen):
             a11y.speak("Please enter your email and password.")
             return
 
-        self.status_text = "Signing in…"
+        self.status_text = "Signing in… first sign-in can take a few minutes."
         self.is_loading  = True
-        a11y.speak("Signing in, please wait.")
+        a11y.speak("Signing in. The first sign-in can take a few minutes, please wait.")
 
         api.run_in_thread(
             self._do_login,

@@ -137,11 +137,13 @@
                             radius: [8]
 
         # ── Password prompt modal ─────────────────────────────────────────────
+        # Sits high on the screen so the docked on-screen keyboard (bottom half)
+        # doesn't cover the password field while typing.
         BoxLayout:
             id: pwd_modal
             size_hint: None, None
             size: '400dp', '230dp'
-            pos_hint: {'center_x': 0.5, 'center_y': 0.5}
+            pos_hint: {'center_x': 0.5, 'top': 0.98}
             opacity: 1 if root.show_password_prompt else 0
             disabled: not root.show_password_prompt
             orientation: 'vertical'

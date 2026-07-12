@@ -65,15 +65,67 @@ def _scan_networks() -> list[dict]:
         return []
 
 
+def _delete_saved_profile(ssid: str) -> None:
+    """Best-effort removal of a saved connection profile named *ssid*."""
+    try:
+        subprocess.run(
+            ["nmcli", "connection", "delete", "id", ssid],
+            capture_output=True, text=True, timeout=10,
+        )
+    except Exception:
+        pass
+
+
+def _connect_wpa_psk_explicit(ssid: str, password: str) -> tuple[bool, str]:
+    """
+    Build a WPA-PSK profile explicitly and bring it up.
+
+    Fallback for when `nmcli device wifi connect` fails with
+    "802-11-wireless-security.key-mgmt: property is missing" — some drivers /
+    stale profiles don't get key management set automatically, so we set it.
+    """
+    _delete_saved_profile(ssid)
+    try:
+        add = subprocess.run(
+            ["nmcli", "connection", "add", "type", "wifi",
+             "con-name", ssid, "ssid", ssid,
+             "wifi-sec.key-mgmt", "wpa-psk", "wifi-sec.psk", password],
+            capture_output=True, text=True, timeout=20,
+        )
+        if add.returncode != 0:
+            return False, add.stderr.strip() or "Could not create connection."
+        up = subprocess.run(
+            ["nmcli", "connection", "up", "id", ssid],
+            capture_output=True, text=True, timeout=45,
+        )
+        if up.returncode == 0:
+            return True, f"Connected to {ssid}"
+        return False, up.stderr.strip() or "Could not activate connection."
+    except subprocess.TimeoutExpired:
+        return False, "Connection timed out."
+    except Exception as e:
+        return False, str(e)
+
+
 def _connect_network(ssid: str, password: str | None) -> tuple[bool, str]:
+    # Clear any stale/partial saved profile first — a half-configured profile is
+    # the usual cause of "key-mgmt: property is missing", even with the right
+    # password. We always rebuild it fresh.
+    _delete_saved_profile(ssid)
     try:
         cmd = ["nmcli", "device", "wifi", "connect", ssid]
         if password:
             cmd += ["password", password]
-        result = subprocess.run(cmd, capture_output=True, text=True, timeout=30)
+        result = subprocess.run(cmd, capture_output=True, text=True, timeout=45)
         if result.returncode == 0:
             return True, f"Connected to {ssid}"
-        err = result.stderr.strip() or result.stdout.strip()
+
+        err = (result.stderr.strip() or result.stdout.strip() or "").strip()
+
+        # Explicit WPA-PSK fallback for the key-mgmt error.
+        if password and "key-mgmt" in err.lower():
+            return _connect_wpa_psk_explicit(ssid, password)
+
         return False, err or "Connection failed."
     except FileNotFoundError:
         return False, "nmcli not found. Install NetworkManager."

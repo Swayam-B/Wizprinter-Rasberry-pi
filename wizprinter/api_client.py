@@ -30,10 +30,10 @@ _RETRY_BASE_SEC = float(os.environ.get("API_RETRY_BASE_SEC",          "0.5"))
 _RETRY_CAP_SEC  = float(os.environ.get("API_RETRY_MAX_SLEEP_SEC",     "30"))
 
 # Read timeout for the first post-login backend call. The login path does NOT
-# retry (see _request_once), so this is a single fail-fast wait: long enough for
-# a warm/slightly-slow backend to answer, short enough that a cold-starting
-# container bails quickly and asks the user to tap Sign In again.
-ONBOARD_TIMEOUT_SEC = float(os.environ.get("API_ONBOARD_TIMEOUT_SEC", "20"))
+# retry (see _request_once), so this is a single wait sized to ride out a full
+# scale-to-zero cold start (Azure Container Apps can take up to ~5 minutes),
+# rather than making the user re-tap Sign In repeatedly.
+ONBOARD_TIMEOUT_SEC = float(os.environ.get("API_ONBOARD_TIMEOUT_SEC", "300"))
 
 
 def _is_transient(exc: BaseException) -> bool:
@@ -262,9 +262,9 @@ def firebase_sign_in(email: str, password: str) -> dict:
 
 def onboard_professor() -> dict:
     # First call to our backend right after sign-in — this is where a
-    # scale-to-zero container cold start hits. Single attempt (no retry): if it's
-    # slow, fail fast and let the login screen tell the user to tap Sign In again
-    # (by then the container this request woke up is warm).
+    # scale-to-zero container cold start hits. Single attempt (no retry storm)
+    # but with a long timeout (ONBOARD_TIMEOUT_SEC) so one Sign In tap rides out
+    # the whole cold start instead of the user having to re-tap.
     return _request_once(
         "post",
         f"{BASE_URL}/api/professors/onboard",
