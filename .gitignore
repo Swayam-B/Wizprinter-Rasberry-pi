@@ -54,5 +54,9 @@ __pycache__/
 temp/
 test.jpg
 
+# Runtime state — never commit. Logs may contain student data (FERPA); the
+# per-device id is generated on first run and must be unique per kiosk.
+logs/
+
 # Downloaded Piper TTS voice models (fetched by setup_pi.sh)
 voices/
